@@ -7,9 +7,15 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f0f9ff; }
+        body { font-family: 'Inter', sans-serif; background-color: #0f172a; }
         
-        /* Permanent Top Navigation */
+        .glass-card {
+            background: rgba(30, 41, 59, 0.5);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        /* Fixed Top Navigation Bar */
         .fixed-nav {
             background-color: #dbeafe; 
             display: flex;
@@ -19,116 +25,129 @@
             top: 0;
             z-index: 100;
             border-bottom: 1px solid #bfdbfe;
-            scrollbar-width: none; /* Hide scrollbar for Chrome/Safari */
+            scrollbar-width: none; 
         }
         .fixed-nav::-webkit-scrollbar { display: none; }
 
         .nav-item {
             padding: 14px 20px;
             font-size: 14px;
-            font-weight: 600;
+            font-weight: 700;
             color: #1e293b;
             transition: all 0.2s;
             cursor: pointer;
             border: none;
-            outline: none;
         }
 
-        /* Active State from your image */
+        /* Cyan Active State from your sample */
         .nav-item.active {
             background-color: #00aeef; 
-            color: black;
+            color: white;
         }
 
-        .app-container {
-            max-width: 600px;
-            margin: 20px auto;
-            padding: 0 15px;
+        .content-section {
+            animation: fadeIn 0.3s ease-in-out;
         }
 
-        .hidden { display: none; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
-<body class="text-slate-900">
+<body class="text-slate-200">
 
     <div id="loginOverlay" class="fixed inset-0 z-[200] flex items-center justify-center bg-[#0f172a] p-4 transition-opacity duration-500">
         <div class="bg-white p-8 md:p-12 rounded-[2.5rem] shadow-2xl max-w-sm w-full text-center">
-            <h1 class="text-[#1e293b] text-4xl font-extrabold mb-2 tracking-tight">Smart Calc</h1>
-            <p class="text-slate-500 text-lg mb-10 font-medium">Sign in to access your logs</p>
+            <h1 class="text-[#1e293b] text-4xl font-extrabold mb-2 tracking-tight">My Finance Log</h1>
+            <p class="text-slate-500 text-lg mb-10 font-medium">Sign in to manage your Money & Time</p>
             <button id="googleSignInBtn" class="w-full bg-[#2563eb] text-white font-bold py-4 px-6 rounded-2xl flex items-center justify-center gap-3 active:scale-95 transition-transform">
                 Sign in with Google
             </button>
         </div>
     </div>
 
-    <div id="mainApp" class="hidden">
+    <div id="mainContent" class="hidden">
         
         <nav class="fixed-nav" id="topNav">
-            <button class="nav-item active" onclick="showSection('attendance', this)">Attendance Log</button>
-            <button class="nav-item" onclick="showSection('expense', this)">Expance Tracker</button>
-            <button class="nav-item" onclick="showSection('credit', this)">Credit-Debit Tracketer</button>
-            <button class="nav-item" onclick="showSection('budget', this)">Budget Tracketer</button>
-            <button class="nav-item" onclick="showSection('task', this)">Task maneger</button>
-            <button id="logoutBtn" class="nav-item text-red-600">Logout</button>
+            <button class="nav-item active" onclick="switchSection('attendance', this)">Attendance Log</button>
+            <button class="nav-item" onclick="switchSection('expense', this)">Expance Tracker</button>
+            <button class="nav-item" onclick="switchSection('credit', this)">Credit-Debit Tracketer</button>
+            <button class="nav-item" onclick="switchSection('budget', this)">Budget Tracketer</button>
+            <button class="nav-item" onclick="switchSection('task', this)">Task maneger</button>
         </nav>
 
-        <div class="app-container">
+        <div class="max-w-4xl mx-auto p-6">
             
+            <header class="flex justify-between items-center mb-8">
+                <div>
+                    <h1 class="text-2xl font-extrabold text-white">Smart Calc</h1>
+                    <p class="text-emerald-400 text-sm font-semibold" id="userName">...</p>
+                </div>
+                <button id="logoutBtn" class="bg-slate-800 text-xs font-bold px-4 py-2 rounded-lg hover:bg-red-500/20 transition-all">LOGOUT</button>
+            </header>
+
             <div id="section-attendance" class="content-section">
-                <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
+                <div class="glass-card p-6 rounded-[2.5rem] max-w-md mx-auto">
                     <div class="flex justify-between items-center mb-6">
-                        <h2 class="text-2xl font-bold text-blue-600">Attendance</h2>
+                        <h2 class="text-2xl font-bold text-white">Attendance</h2>
                         <div class="text-right">
-                            <p class="text-[10px] text-slate-400 font-extrabold uppercase leading-none">This Month OT</p>
-                            <p class="text-blue-600 font-bold text-lg">0 hrs</p>
+                            <span class="text-[10px] text-slate-400 block font-bold">THIS MONTH OT</span>
+                            <span class="text-blue-400 font-bold">0 hrs</span>
                         </div>
                     </div>
-
-                    <div class="grid grid-cols-3 gap-3 mb-8">
-                        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-center">
-                            <p class="text-[10px] font-bold text-slate-400">DEC</p>
-                            <p class="text-xl font-bold">0</p>
+                    
+                    <div class="grid grid-cols-3 gap-3 mb-6">
+                        <div class="bg-white/5 p-4 rounded-2xl text-center border border-white/5">
+                            <span class="text-[10px] block font-bold text-slate-500">DEC</span>
+                            <span class="font-bold text-xl text-white">0</span>
                         </div>
-                        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-center">
-                            <p class="text-[10px] font-bold text-slate-400">JAN</p>
-                            <p class="text-xl font-bold">0</p>
+                        <div class="bg-white/5 p-4 rounded-2xl text-center border border-white/5">
+                            <span class="text-[10px] block font-bold text-slate-500">JAN</span>
+                            <span class="font-bold text-xl text-white">0</span>
                         </div>
-                        <div class="bg-blue-600 p-4 rounded-2xl text-white text-center shadow-lg shadow-blue-100">
-                            <p class="text-[10px] font-bold opacity-80 uppercase">Present</p>
-                            <p class="text-xl font-bold">1</p>
+                        <div class="bg-blue-600 p-4 rounded-2xl text-center shadow-lg shadow-blue-500/20">
+                            <span class="text-[10px] block font-bold text-blue-100">PRESENT</span>
+                            <span class="font-bold text-xl text-white">1</span>
                         </div>
                     </div>
 
                     <div class="space-y-4">
-                        <div class="flex gap-2">
-                            <input type="date" class="flex-1 p-4 bg-slate-50 rounded-2xl border-none outline-none focus:ring-2 focus:ring-blue-400" value="2026-02-02">
-                            <select class="p-4 bg-slate-50 rounded-2xl border-none outline-none focus:ring-2 focus:ring-blue-400">
-                                <option>✅ Present</option>
-                                <option>❌ Absent</option>
-                            </select>
-                        </div>
-                        <div class="bg-blue-50/50 p-4 rounded-2xl flex items-center justify-between">
-                            <span class="text-blue-700 font-bold text-sm">OT (HRS):</span>
-                            <input type="number" value="0" class="bg-transparent text-right font-bold outline-none w-16">
-                        </div>
-                        <button class="w-full bg-[#1e293b] text-white py-4 rounded-2xl font-bold text-lg hover:bg-black transition-colors">
-                            Save Entry
-                        </button>
+                        <input type="date" value="2026-02-02" class="w-full bg-slate-800 p-4 rounded-2xl border-none outline-none text-white">
+                        <select class="w-full bg-slate-800 p-4 rounded-2xl border-none outline-none text-white">
+                            <option>✅ Present</option>
+                            <option>❌ Absent</option>
+                        </select>
+                        <button class="w-full bg-white text-slate-900 py-4 rounded-2xl font-extrabold text-lg active:scale-95 transition-transform">Save Today's Log</button>
                     </div>
                 </div>
             </div>
 
             <div id="section-expense" class="content-section hidden">
-                <div class="bg-white p-8 rounded-[2rem] shadow-sm text-center">
-                    <h2 class="text-xl font-bold mb-2">Expance Tracker</h2>
-                    <p class="text-slate-500">Manage your daily expenses here.</p>
+                <div class="glass-card p-10 rounded-[2.5rem] text-center">
+                    <h2 class="text-2xl font-bold text-emerald-400">Expense Tracker</h2>
+                    <p class="text-slate-400 mt-2">Manage your daily spending analytics here.</p>
                 </div>
             </div>
 
             <div id="section-credit" class="content-section hidden">
-                <div class="bg-white p-8 rounded-[2rem] shadow-sm text-center">
-                    <h2 class="text-xl font-bold mb-2">Credit-Debit Tracker</h2>
-                    <p class="text-slate-500">Transactions will appear here.</p>
+                <div class="glass-card p-10 rounded-[2.5rem] text-center">
+                    <h2 class="text-2xl font-bold text-cyan-400">Credit-Debit</h2>
+                    <p class="text-slate-400 mt-2">Balance tracking and history.</p>
+                </div>
+            </div>
+
+            <div id="section-budget" class="content-section hidden">
+                <div class="glass-card p-10 rounded-[2.5rem] text-center">
+                    <h2 class="text-2xl font-bold text-purple-400">Budgeting</h2>
+                    <p class="text-slate-400 mt-2">Plan your monthly limits.</p>
+                </div>
+            </div>
+
+            <div id="section-task" class="content-section hidden">
+                <div class="glass-card p-10 rounded-[2.5rem] text-center">
+                    <h2 class="text-2xl font-bold text-amber-400">Task Manager</h2>
+                    <p class="text-slate-400 mt-2">Prioritize your goals and deadlines.</p>
                 </div>
             </div>
 
@@ -153,10 +172,11 @@
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 document.getElementById('loginOverlay').classList.add('hidden');
-                document.getElementById('mainApp').classList.remove('hidden');
+                document.getElementById('mainContent').classList.remove('hidden');
+                document.getElementById('userName').innerText = user.displayName;
             } else {
                 document.getElementById('loginOverlay').classList.remove('hidden');
-                document.getElementById('mainApp').classList.add('hidden');
+                document.getElementById('mainContent').classList.add('hidden');
             }
         });
 
@@ -165,20 +185,16 @@
     </script>
 
     <script>
-        function showSection(id, btn) {
-            // 1. Hide all sections
-            document.querySelectorAll('.content-section').forEach(section => {
-                section.classList.add('hidden');
-            });
+        function switchSection(sectionId, element) {
+            // Hide all sections
+            document.querySelectorAll('.content-section').forEach(s => s.classList.add('hidden'));
+            
+            // Show target section
+            document.getElementById('section-' + sectionId).classList.remove('hidden');
 
-            // 2. Show the one you clicked
-            document.getElementById('section-' + id).classList.remove('hidden');
-
-            // 3. Update the button colors
-            document.querySelectorAll('.nav-item').forEach(navBtn => {
-                navBtn.classList.remove('active');
-            });
-            btn.classList.add('active');
+            // Update Nav active state
+            document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+            element.classList.add('active');
         }
     </script>
 </body>
