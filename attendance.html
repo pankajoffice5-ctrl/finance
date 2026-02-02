@@ -38,7 +38,7 @@
             <div class="bg-white rounded-2xl border p-5 shadow-sm">
                 <form id="attendance-form" class="space-y-4">
                     <div class="grid grid-cols-2 gap-3">
-                        <input type="date" id="att-date" class="bg-slate-50 rounded-xl p-3 text-sm outline-none border focus:border-blue-300">
+                        <input type="date" id="att-date" class="bg-slate-50 rounded-xl p-3 text-sm outline-none border focus:border-blue-300" required>
                         <select id="status" class="bg-slate-50 rounded-xl p-3 text-sm outline-none border">
                             <option value="Present">✅ Present</option>
                             <option value="Absent">❌ Absent</option>
@@ -58,38 +58,63 @@
     </div>
 
     <script>
-        let attendanceData = [];
+        let db;
+        const DB_NAME = "AttendanceDB";
+        const STORE_NAME = "logs";
 
-        // UI Initializer
-        window.onload = () => {
-            document.getElementById('att-date').valueAsDate = new Date();
-            renderData();
+        // 1. Initialize IndexedDB
+        const request = indexedDB.open(DB_NAME, 1);
+
+        request.onupgradeneeded = (e) => {
+            db = e.target.result;
+            if (!db.objectStoreNames.contains(STORE_NAME)) {
+                // We use 'date' as keyPath to prevent duplicate entries for the same day
+                db.createObjectStore(STORE_NAME, { keyPath: "date" });
+            }
         };
 
-        // Toggle OT input visibility
+        request.onsuccess = (e) => {
+            db = e.target.result;
+            loadLogs();
+        };
+
+        // UI Helpers
         document.getElementById('status').addEventListener('change', (e) => {
             document.getElementById('ot-container').style.display = (e.target.value === 'Present') ? 'flex' : 'none';
         });
 
-        function renderData() {
+        function loadLogs() {
+            const transaction = db.transaction([STORE_NAME], "readonly");
+            const store = transaction.objectStore(STORE_NAME);
+            const getAll = store.getAll();
+
+            getAll.onsuccess = () => {
+                renderData(getAll.result);
+            };
+        }
+
+        function renderData(data) {
             let html = '';
             let stats = { curP: 0, curOT: 0, m1OT: 0, m2OT: 0 };
             const now = new Date();
 
             // Sort data by date descending
-            attendanceData.sort((a, b) => new Date(b.date) - new Date(a.date));
+            data.sort((a, b) => new Date(b.date) - new Date(a.date));
 
-            attendanceData.forEach((entry, index) => {
+            data.forEach((entry) => {
                 const date = new Date(entry.date);
                 const ot = parseFloat(entry.otHours) || 0;
                 
                 // Monthly stats logic
+                const d1 = new Date(); d1.setMonth(now.getMonth() - 1);
+                const d2 = new Date(); d2.setMonth(now.getMonth() - 2);
+
                 if (date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear()) {
                     if(entry.status === 'Present') stats.curP++;
                     stats.curOT += ot;
-                } else if (date.getMonth() === (now.getMonth() - 1)) {
+                } else if (date.getMonth() === d1.getMonth() && date.getFullYear() === d1.getFullYear()) {
                     stats.m1OT += ot;
-                } else if (date.getMonth() === (now.getMonth() - 2)) {
+                } else if (date.getMonth() === d2.getMonth() && date.getFullYear() === d2.getFullYear()) {
                     stats.m2OT += ot;
                 }
 
@@ -99,13 +124,15 @@
                             <div class="bg-slate-100 text-[9px] font-bold p-2 rounded-lg text-slate-500 text-center uppercase">
                                 ${date.toLocaleDateString('en-GB', {day:'2-digit', month:'short'}).replace(' ', '<br>')}
                             </div>
-                            <p class="text-sm font-bold ${entry.status === 'Present' ? 'text-green-600' : 'text-red-500'}">${entry.status} ${ot > 0 ? `(+${ot} hrs)` : ''}</p>
+                            <p class="text-sm font-bold ${entry.status === 'Present' ? 'text-green-600' : 'text-red-500'}">
+                                ${entry.status} ${ot > 0 ? `(+${ot} hrs)` : ''}
+                            </p>
                         </div>
-                        <button onclick="deleteAtt(${index})" class="text-slate-200 hover:text-red-500 transition-colors">✕</button>
+                        <button onclick="deleteAtt('${entry.date}')" class="text-slate-200 hover:text-red-500 transition-colors">✕</button>
                     </div>`;
             });
 
-            document.getElementById('attendance-list').innerHTML = html;
+            document.getElementById('attendance-list').innerHTML = html || '<p class="text-center text-slate-400 py-10">No logs found.</p>';
             document.getElementById('present-count').innerText = stats.curP;
             document.getElementById('current-ot-total').innerText = stats.curOT + " hrs";
             document.getElementById('m1-ot').innerText = stats.m1OT;
@@ -121,11 +148,6 @@
         document.getElementById('attendance-form').onsubmit = (e) => {
             e.preventDefault();
             const dateInput = document.getElementById('att-date').value;
-            
-            if (attendanceData.some(entry => entry.date === dateInput)) {
-                alert("Only one entry per day allowed!");
-                return;
-            }
 
             const newEntry = {
                 date: dateInput,
@@ -133,20 +155,34 @@
                 otHours: document.getElementById('status').value === 'Present' ? parseFloat(document.getElementById('ot-hours').value) : 0
             };
 
-            attendanceData.push(newEntry);
-            renderData();
+            const transaction = db.transaction([STORE_NAME], "readwrite");
+            const store = transaction.objectStore(STORE_NAME);
+            
+            // .put() will update the record if the date already exists, or add a new one
+            const request = store.put(newEntry);
 
-            e.target.reset();
-            document.getElementById('att-date').valueAsDate = new Date();
-            document.getElementById('status').value = 'Present';
-            document.getElementById('ot-container').style.display = 'flex';
+            request.onsuccess = () => {
+                e.target.reset();
+                document.getElementById('att-date').valueAsDate = new Date();
+                document.getElementById('status').value = 'Present';
+                document.getElementById('ot-container').style.display = 'flex';
+                loadLogs();
+            };
+
+            request.onerror = () => alert("Error saving to database.");
         };
 
-        window.deleteAtt = (index) => { 
+        window.deleteAtt = (dateId) => { 
             if(confirm("Delete this log?")) {
-                attendanceData.splice(index, 1);
-                renderData();
+                const transaction = db.transaction([STORE_NAME], "readwrite");
+                const store = transaction.objectStore(STORE_NAME);
+                store.delete(dateId);
+                transaction.oncomplete = () => loadLogs();
             }
+        };
+
+        window.onload = () => {
+            document.getElementById('att-date').valueAsDate = new Date();
         };
     </script>
 </body>
