@@ -7,7 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #0f172a; }
+        body { font-family: 'Inter', sans-serif; background-color: #0f172a; margin: 0; }
         
         .glass-card {
             background: rgba(30, 41, 59, 0.5);
@@ -15,7 +15,7 @@
             border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
-        /* Fixed Top Navigation Bar */
+        /* Permanent Top Navigation Bar */
         .fixed-nav {
             background-color: #dbeafe; 
             display: flex;
@@ -37,9 +37,11 @@
             transition: all 0.2s;
             cursor: pointer;
             border: none;
+            background: none;
+            outline: none;
         }
 
-        /* Cyan Active State from your sample */
+        /* Cyan Active State from your image */
         .nav-item.active {
             background-color: #00aeef; 
             color: white;
@@ -53,6 +55,8 @@
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
+
+        .hidden { display: none !important; }
     </style>
 </head>
 <body class="text-slate-200">
@@ -64,6 +68,7 @@
             <button id="googleSignInBtn" class="w-full bg-[#2563eb] text-white font-bold py-4 px-6 rounded-2xl flex items-center justify-center gap-3 active:scale-95 transition-transform">
                 Sign in with Google
             </button>
+            <p id="authError" class="text-red-500 text-xs mt-4 font-semibold hidden"></p>
         </div>
     </div>
 
@@ -71,20 +76,17 @@
         
         <nav class="fixed-nav" id="topNav">
             <button class="nav-item active" onclick="switchSection('attendance', this)">Attendance Log</button>
-            <button class="nav-item" onclick="switchSection('expense', this)">Expance Tracker</button>
-            <button class="nav-item" onclick="switchSection('credit', this)">Credit-Debit Tracketer</button>
-            <button class="nav-item" onclick="switchSection('budget', this)">Budget Tracketer</button>
-            <button class="nav-item" onclick="switchSection('task', this)">Task maneger</button>
+            <button class="nav-item" onclick="switchSection('expense', this)">Expense Tracker</button>
+            <button class="nav-item" onclick="switchSection('credit', this)">Credit-Debit Tracker</button>
+            <button class="nav-item" onclick="switchSection('budget', this)">Budget Tracker</button>
+            <button class="nav-item" onclick="switchSection('task', this)">Task Manager</button>
+            <button class="nav-item text-red-600 font-bold" id="logoutBtn">Sign Out</button>
         </nav>
 
         <div class="max-w-4xl mx-auto p-6">
-            
-            <header class="flex justify-between items-center mb-8">
-                <div>
-                    <h1 class="text-2xl font-extrabold text-white">Smart Calc</h1>
-                    <p class="text-emerald-400 text-sm font-semibold" id="userName">...</p>
-                </div>
-                <button id="logoutBtn" class="bg-slate-800 text-xs font-bold px-4 py-2 rounded-lg hover:bg-red-500/20 transition-all">LOGOUT</button>
+            <header class="mb-8">
+                <h1 class="text-2xl font-extrabold text-white">Smart Calc Dashboard</h1>
+                <p class="text-emerald-400 text-sm font-semibold">User: <span id="userName">...</span></p>
             </header>
 
             <div id="section-attendance" class="content-section">
@@ -99,26 +101,28 @@
                     
                     <div class="grid grid-cols-3 gap-3 mb-6">
                         <div class="bg-white/5 p-4 rounded-2xl text-center border border-white/5">
-                            <span class="text-[10px] block font-bold text-slate-500">DEC</span>
+                            <span class="text-[10px] block font-bold text-slate-500 uppercase">Dec</span>
                             <span class="font-bold text-xl text-white">0</span>
                         </div>
                         <div class="bg-white/5 p-4 rounded-2xl text-center border border-white/5">
-                            <span class="text-[10px] block font-bold text-slate-500">JAN</span>
+                            <span class="text-[10px] block font-bold text-slate-500 uppercase">Jan</span>
                             <span class="font-bold text-xl text-white">0</span>
                         </div>
                         <div class="bg-blue-600 p-4 rounded-2xl text-center shadow-lg shadow-blue-500/20">
-                            <span class="text-[10px] block font-bold text-blue-100">PRESENT</span>
+                            <span class="text-[10px] block font-bold text-blue-100 uppercase">Present</span>
                             <span class="font-bold text-xl text-white">1</span>
                         </div>
                     </div>
 
                     <div class="space-y-4">
-                        <input type="date" value="2026-02-02" class="w-full bg-slate-800 p-4 rounded-2xl border-none outline-none text-white">
-                        <select class="w-full bg-slate-800 p-4 rounded-2xl border-none outline-none text-white">
+                        <input type="date" value="2026-02-02" class="w-full bg-slate-800 p-4 rounded-2xl border-none outline-none text-white focus:ring-2 focus:ring-blue-500">
+                        <select class="w-full bg-slate-800 p-4 rounded-2xl border-none outline-none text-white focus:ring-2 focus:ring-blue-500">
                             <option>✅ Present</option>
                             <option>❌ Absent</option>
                         </select>
-                        <button class="w-full bg-white text-slate-900 py-4 rounded-2xl font-extrabold text-lg active:scale-95 transition-transform">Save Today's Log</button>
+                        <button class="w-full bg-white text-slate-900 py-4 rounded-2xl font-extrabold text-lg active:scale-95 transition-transform hover:bg-slate-100">
+                            Save Today's Log
+                        </button>
                     </div>
                 </div>
             </div>
@@ -126,33 +130,49 @@
             <div id="section-expense" class="content-section hidden">
                 <div class="glass-card p-10 rounded-[2.5rem] text-center">
                     <h2 class="text-2xl font-bold text-emerald-400">Expense Tracker</h2>
-                    <p class="text-slate-400 mt-2">Manage your daily spending analytics here.</p>
+                    <p class="text-slate-400 mt-2">Daily spending analytics section.</p>
                 </div>
             </div>
 
             <div id="section-credit" class="content-section hidden">
                 <div class="glass-card p-10 rounded-[2.5rem] text-center">
-                    <h2 class="text-2xl font-bold text-cyan-400">Credit-Debit</h2>
-                    <p class="text-slate-400 mt-2">Balance tracking and history.</p>
+                    <h2 class="text-2xl font-bold text-cyan-400">Credit-Debit Tracker</h2>
+                    <p class="text-slate-400 mt-2">Manage balances and debts.</p>
                 </div>
             </div>
 
             <div id="section-budget" class="content-section hidden">
                 <div class="glass-card p-10 rounded-[2.5rem] text-center">
-                    <h2 class="text-2xl font-bold text-purple-400">Budgeting</h2>
-                    <p class="text-slate-400 mt-2">Plan your monthly limits.</p>
+                    <h2 class="text-2xl font-bold text-purple-400">Budget Tracker</h2>
+                    <p class="text-slate-400 mt-2">Monthly budget planning.</p>
                 </div>
             </div>
 
             <div id="section-task" class="content-section hidden">
                 <div class="glass-card p-10 rounded-[2.5rem] text-center">
                     <h2 class="text-2xl font-bold text-amber-400">Task Manager</h2>
-                    <p class="text-slate-400 mt-2">Prioritize your goals and deadlines.</p>
+                    <p class="text-slate-400 mt-2">Prioritize work and deadlines.</p>
                 </div>
             </div>
 
         </div>
     </div>
+
+    <script>
+        // Tab Switching Logic (Needs to be defined before script module for reliability)
+        function switchSection(sectionId, btnElement) {
+            // Hide all sections
+            document.querySelectorAll('.content-section').forEach(s => s.classList.add('hidden'));
+
+            // Show selected section
+            const target = document.getElementById('section-' + sectionId);
+            if (target) target.classList.remove('hidden');
+
+            // Update Nav active state
+            document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+            if (btnElement) btnElement.classList.add('active');
+        }
+    </script>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -161,41 +181,47 @@
         const firebaseConfig = {
             apiKey: "AIzaSyCYLZPXpFyi_akpP_jH543osgTOQU4V1iA",
             authDomain: "finance-40f69.firebaseapp.com",
+            databaseURL: "https://finance-40f69-default-rtdb.firebaseio.com",
             projectId: "finance-40f69",
-            appId: "1:846297335798:web:a6be2018e40f6a058b29d7"
+            storageBucket: "finance-40f69.firebasestorage.app",
+            messagingSenderId: "846297335798",
+            appId: "1:846297335798:web:a6be2018e40f6a058b29d7",
+            measurementId: "G-GPTK97JDY5"
         };
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const provider = new GoogleAuthProvider();
 
+        const loginOverlay = document.getElementById('loginOverlay');
+        const mainContent = document.getElementById('mainContent');
+        const userNameDisp = document.getElementById('userName');
+
+        // State Listener
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                document.getElementById('loginOverlay').classList.add('hidden');
-                document.getElementById('mainContent').classList.remove('hidden');
-                document.getElementById('userName').innerText = user.displayName;
+                loginOverlay.classList.add('hidden');
+                mainContent.classList.remove('hidden');
+                userNameDisp.innerText = user.displayName || user.email;
             } else {
-                document.getElementById('loginOverlay').classList.remove('hidden');
-                document.getElementById('mainContent').classList.add('hidden');
+                loginOverlay.classList.remove('hidden');
+                mainContent.classList.add('hidden');
             }
         });
 
-        document.getElementById('googleSignInBtn').onclick = () => signInWithPopup(auth, provider);
+        // Sign In
+        document.getElementById('googleSignInBtn').onclick = async () => {
+            try {
+                await signInWithPopup(auth, provider);
+            } catch (error) {
+                const errEl = document.getElementById('authError');
+                errEl.classList.remove('hidden');
+                errEl.innerText = "Login Failed: " + error.message;
+            }
+        };
+
+        // Sign Out
         document.getElementById('logoutBtn').onclick = () => signOut(auth);
-    </script>
-
-    <script>
-        function switchSection(sectionId, element) {
-            // Hide all sections
-            document.querySelectorAll('.content-section').forEach(s => s.classList.add('hidden'));
-            
-            // Show target section
-            document.getElementById('section-' + sectionId).classList.remove('hidden');
-
-            // Update Nav active state
-            document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
-            element.classList.add('active');
-        }
     </script>
 </body>
 </html>
