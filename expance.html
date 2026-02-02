@@ -3,268 +3,176 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Expanse Tracker | Analytics</title>
+    <title>Smart Calc | Fixed Navigation</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
     <style>
-        #cat-list::-webkit-scrollbar { width: 4px; }
-        #cat-list::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        .filter-active { border: 2px solid #3b82f6 !important; }
+        body { font-family: 'Inter', sans-serif; }
+        .glass-card {
+            background: rgba(30, 41, 59, 0.5);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        /* Fixed Top Navigation Bar */
+        .top-nav {
+            background-color: #dbeafe; 
+            display: flex;
+            overflow-x: auto;
+            white-space: nowrap;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            border-bottom: 1px solid #bfdbfe;
+        }
+        .top-nav button {
+            padding: 12px 24px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #1e293b;
+            transition: all 0.2s;
+            border: none;
+            cursor: pointer;
+        }
+        .top-nav button.active {
+            background-color: #00aeef; /* Blue from your image */
+            color: white;
+        }
     </style>
 </head>
-<body class="bg-slate-50 min-h-screen font-sans">
+<a href="https://pankajoffice5-ctrl.github.io/finance/">🏠 Back</a>
+<body class="bg-[#f8fafc] text-slate-900 min-h-screen">
 
-    <div id="app-content" class="max-w-md mx-auto pb-20">
-        <header class="bg-white border-b p-6 sticky top-0 z-10 flex justify-between items-center shadow-sm">
-            <div>
-                <h1 class="text-xl font-black text-blue-600">Expanse Trac</h1>
-            </div>
-            <div class="text-right">
-                <p class="text-[10px] font-bold text-slate-400 uppercase">Lifetime Spend</p>
-                <h2 id="total-amount" class="text-xl font-black text-slate-800">0.00</h2>
-            </div>
-        </header>
-
-        <section class="p-4 grid grid-cols-3 gap-2">
-            <div class="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm text-center">
-                <p id="m2-name" class="text-[9px] font-bold text-slate-400 uppercase">--</p>
-                <h3 id="m2-total" class="text-sm font-black text-slate-700">0</h3>
-            </div>
-            <div class="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm text-center border-b-4 border-b-blue-200">
-                <p id="m1-name" class="text-[9px] font-bold text-slate-400 uppercase">--</p>
-                <h3 id="m1-total" class="text-sm font-black text-slate-700">0</h3>
-            </div>
-            <div class="bg-blue-600 p-3 rounded-2xl shadow-md text-center text-white">
-                <p class="text-[9px] font-bold uppercase opacity-80">This Month</p>
-                <h3 id="curr-total" class="text-sm font-black">0</h3>
-            </div>
-        </section>
-
-        <section class="px-4 mb-4">
-            <div class="bg-white p-4 rounded-3xl border border-slate-200 shadow-sm text-center">
-                <p id="filter-status" class="text-[10px] font-bold text-blue-500 uppercase mb-2 hidden">Filtering by Category</p>
-                <div class="max-w-[160px] mx-auto">
-                    <canvas id="expenseChart"></canvas>
-                </div>
-                <p class="text-[9px] text-slate-400 mt-2 italic">Click a slice to filter list</p>
-            </div>
-        </section>
-
-        <section class="px-4 pb-4">
-            <div class="bg-white rounded-2xl border p-5 shadow-sm">
-                <form id="expense-form" class="space-y-3">
-                    <div class="grid grid-cols-2 gap-3 relative">
-                        <div class="relative col-span-1">
-                            <input type="text" id="cat-search" placeholder="Search Category..." 
-                                class="w-full bg-slate-50 rounded-xl p-3 text-sm outline-none border border-transparent focus:border-blue-300" autocomplete="off">
-                            <div id="cat-list" class="hidden absolute top-full left-0 w-full bg-white border shadow-xl rounded-xl mt-1 z-50 max-h-48 overflow-y-auto p-1"></div>
-                            <input type="hidden" id="selected-category" required>
-                        </div>
-                        <input type="date" id="exp-date" class="bg-slate-50 rounded-xl p-3 text-sm outline-none">
-                    </div>
-                    
-                    <div class="grid grid-cols-3 gap-3">
-                        <input type="number" step="0.01" id="amount" placeholder="0.00" class="col-span-1 bg-slate-50 rounded-xl p-3 text-sm" required>
-                        <input type="text" id="desc" placeholder="Description" class="col-span-2 bg-slate-50 rounded-xl p-3 text-sm" required>
-                    </div>
-                    <button type="submit" class="w-full bg-slate-900 text-white font-bold py-3 rounded-xl hover:bg-black transition-all">Add Expense</button>
-                </form>
-            </div>
-        </section>
-
-        <section id="expense-list" class="px-4 space-y-3"></section>
+    <div id="loginOverlay" class="fixed inset-0 z-[60] flex items-center justify-center bg-[#0f172a] p-4 transition-opacity duration-500">
+        <div class="bg-white p-8 md:p-12 rounded-[2.5rem] shadow-2xl max-w-sm w-full text-center">
+            <h1 class="text-[#1e293b] text-4xl font-extrabold mb-2 tracking-tight">My Finance Log</h1>
+            <p class="text-slate-500 text-lg mb-10 font-medium">Sign in to manage your Money & Time</p>
+            <button id="googleSignInBtn" class="w-full bg-[#2563eb] text-white font-bold py-4 px-6 rounded-2xl flex items-center justify-center gap-3">
+                Sign in with Google
+            </button>
+        </div>
     </div>
 
-    <script>
-        let db;
-        let myChart = null;
-        let activeFilter = null;
-        const DB_NAME = "ExpanseTracDB";
-        const STORE_NAME = "expenses";
-
-        // --- Database Initialization ---
-        const request = indexedDB.open(DB_NAME, 1);
-
-        request.onupgradeneeded = (e) => {
-            db = e.target.result;
-            if (!db.objectStoreNames.contains(STORE_NAME)) {
-                db.createObjectStore(STORE_NAME, { keyPath: "id", autoIncrement: true });
-            }
-        };
-
-        request.onsuccess = (e) => {
-            db = e.target.result;
-            initChart();
-            loadFromDB();
-        };
-
-        const categories = [
-            "🛒 Grocery", "🏥 Medical", "🛍️ Shopping", "🍽️ Food & Drink", 
-            "💧 Water", "🔥 Gas", "🚌 Transportation", "🏠 Rent", 
-            "📱 Phone & Internet", "👕 Cloths", "🎬 Entertainment", "🎁 Nevta", "📦 Other"
-        ];
-
-        // --- Category Logic ---
-        const catSearch = document.getElementById('cat-search');
-        const catList = document.getElementById('cat-list');
-        const hiddenCat = document.getElementById('selected-category');
-
-        function renderCategories(filter = "") {
-            const filtered = categories.filter(c => c.toLowerCase().includes(filter.toLowerCase()));
-            catList.innerHTML = filtered.map(c => 
-                `<div class="p-3 hover:bg-blue-50 cursor-pointer rounded-lg text-sm font-medium" onclick="selectCategory('${c}')">${c}</div>`
-            ).join('');
-        }
-
-        catSearch.onfocus = () => { renderCategories(); catList.classList.remove('hidden'); };
-        catSearch.oninput = (e) => renderCategories(e.target.value);
+    <div id="mainContent" class="hidden">
         
-        window.selectCategory = (val) => {
-            catSearch.value = val;
-            hiddenCat.value = val;
-            catList.classList.add('hidden');
-        };
+        <nav class="top-nav shadow-sm">
+            <button onclick="switchSection('dashboard')" id="nav-dashboard" class="active">Dashboard</button>
+            <button onclick="switchSection('attendance')" id="nav-attendance">Attendance Log</button>
+            <button onclick="switchSection('expense')" id="nav-expense">Expanse Tracker</button>
+            <button onclick="switchSection('credit')" id="nav-credit">Credit-Debit Tracketer</button>
+            <button onclick="switchSection('budget')" id="nav-budget">Budget Tracketer</button>
+            <button onclick="switchSection('task')" id="nav-task">Task maneger</button>
+        </nav>
 
-        // --- Chart & Filter ---
-        function initChart() {
-            const ctx = document.getElementById('expenseChart').getContext('2d');
-            myChart = new Chart(ctx, {
-                type: 'doughnut',
-                data: { labels: [], datasets: [{ data: [], backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'], borderWidth: 0 }] },
-                options: { 
-                    cutout: '75%', 
-                    plugins: { legend: { display: false } },
-                    onClick: (e, active) => {
-                        if (active.length > 0) {
-                            const idx = active[0].index;
-                            filterListByCategory(myChart.data.labels[idx]);
-                        } else {
-                            filterListByCategory(null);
-                        }
-                    }
-                }
-            });
-        }
-
-        function filterListByCategory(category) {
-            const statusLabel = document.getElementById('filter-status');
-            if (activeFilter === category) {
-                activeFilter = null;
-                statusLabel.classList.add('hidden');
-            } else {
-                activeFilter = category;
-                statusLabel.innerText = `Showing: ${category}`;
-                statusLabel.classList.remove('hidden');
-            }
-            loadFromDB();
-        }
-
-        // --- Data Operations ---
-        function loadFromDB() {
-            const transaction = db.transaction([STORE_NAME], "readonly");
-            const store = transaction.objectStore(STORE_NAME);
-            const getAll = store.getAll();
-
-            getAll.onsuccess = () => {
-                updateUI(getAll.result);
-            };
-        }
-
-        function updateUI(data) {
-            let totals = { lifetime: 0, current: 0, last1: 0, last2: 0 };
-            let catTotals = {};
-            let html = '';
-            const now = new Date();
-
-            const d1 = new Date(); d1.setMonth(now.getMonth() - 1);
-            const d2 = new Date(); d2.setMonth(now.getMonth() - 2);
-            document.getElementById('m1-name').innerText = d1.toLocaleString('default', { month: 'short' });
-            document.getElementById('m2-name').innerText = d2.toLocaleString('default', { month: 'short' });
-
-            // Sort data: Newest date first
-            data.sort((a, b) => new Date(b.date) - new Date(a.date));
-
-            data.forEach((item) => {
-                const amount = parseFloat(item.amount) || 0;
-                const date = new Date(item.date);
-                
-                totals.lifetime += amount;
-                
-                if (date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear()) {
-                    totals.current += amount;
-                    catTotals[item.category] = (catTotals[item.category] || 0) + amount;
-                } else if (date.getMonth() === d1.getMonth() && date.getFullYear() === d1.getFullYear()) {
-                    totals.last1 += amount;
-                } else if (date.getMonth() === d2.getMonth() && date.getFullYear() === d2.getFullYear()) {
-                    totals.last2 += amount;
-                }
-
-                if (!activeFilter || item.category === activeFilter) {
-                    html += `
-                        <div class="bg-white p-4 rounded-2xl flex justify-between items-center shadow-sm border border-slate-100">
-                            <div class="flex items-center gap-3">
-                                <div class="bg-slate-100 text-[9px] font-bold p-2 rounded-lg text-slate-500 text-center uppercase">
-                                    ${date.toLocaleDateString('en-GB', {day:'2-digit', month:'short'}).replace(' ', '<br>')}
-                                </div>
-                                <div>
-                                    <p class="text-sm font-bold text-slate-800">${item.description}</p>
-                                    <p class="text-[10px] text-slate-400 uppercase tracking-tighter">${item.category}</p>
-                                </div>
-                            </div>
-                            <div class="flex items-center gap-4">
-                                <span class="font-black text-slate-900">${amount.toFixed(2)}</span>
-                                <button onclick="deleteItem(${item.id})" class="text-slate-200 hover:text-red-500">✕</button>
-                            </div>
-                        </div>`;
-                }
-            });
-
-            document.getElementById('expense-list').innerHTML = html || '<p class="text-center text-slate-400 py-10 text-sm">No expenses found.</p>';
-            document.getElementById('total-amount').innerText = totals.lifetime.toFixed(2);
-            document.getElementById('curr-total').innerText = Math.round(totals.current);
-            document.getElementById('m1-total').innerText = Math.round(totals.last1);
-            document.getElementById('m2-total').innerText = Math.round(totals.last2);
-
-            myChart.data.labels = Object.keys(catTotals);
-            myChart.data.datasets[0].data = Object.values(catTotals);
-            myChart.update();
-        }
-
-        document.getElementById('expense-form').onsubmit = (e) => {
-            e.preventDefault();
-            if(!hiddenCat.value) return alert("Select a Category");
+        <div class="max-w-4xl mx-auto p-6">
             
-            const newExp = {
-                category: hiddenCat.value,
-                description: document.getElementById('desc').value,
-                amount: parseFloat(document.getElementById('amount').value),
-                date: document.getElementById('exp-date').value // Store as YYYY-MM-DD
-            };
+            <div id="section-dashboard" class="app-section">
+                <div class="flex justify-between items-center mb-8">
+                    <h2 class="text-3xl font-extrabold text-slate-800">Welcome, <span id="userName" class="text-blue-600">...</span></h2>
+                    <button id="logoutBtn" class="text-red-500 font-bold border border-red-200 px-4 py-2 rounded-xl bg-red-50">Logout</button>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+                        <h3 class="text-lg font-bold">Quick Overview</h3>
+                        <p class="text-slate-500 mt-2">Select a tab from the top to begin logging data.</p>
+                    </div>
+                </div>
+            </div>
 
-            const transaction = db.transaction([STORE_NAME], "readwrite");
-            const store = transaction.objectStore(STORE_NAME);
-            store.add(newExp);
+            <div id="section-attendance" class="app-section hidden">
+                <div class="bg-white p-6 rounded-[2.5rem] shadow-xl max-w-md mx-auto">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-bold text-blue-700">Attendance</h2>
+                        <div class="text-right">
+                            <span class="text-[10px] text-slate-400 block uppercase font-bold">This Month OT</span>
+                            <span class="text-blue-600 font-bold">0 hrs</span>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-2 mb-6 text-center">
+                        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                            <span class="text-[10px] block font-bold text-slate-400">DEC</span>
+                            <span class="font-bold">0</span>
+                        </div>
+                        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                            <span class="text-[10px] block font-bold text-slate-400">JAN</span>
+                            <span class="font-bold">0</span>
+                        </div>
+                        <div class="bg-blue-600 p-4 rounded-2xl text-white shadow-lg shadow-blue-200">
+                            <span class="text-[10px] block font-bold opacity-80">PRESENT</span>
+                            <span class="font-bold">1</span>
+                        </div>
+                    </div>
 
-            transaction.oncomplete = () => {
-                e.target.reset();
-                catSearch.value = ""; hiddenCat.value = "";
-                document.getElementById('exp-date').valueAsDate = new Date();
-                loadFromDB();
-            };
+                    <div class="space-y-4">
+                        <input type="date" class="w-full p-4 bg-slate-50 rounded-2xl outline-none border border-slate-100" value="2026-02-02">
+                        <select class="w-full p-4 bg-slate-50 rounded-2xl outline-none border border-slate-100">
+                            <option>✅ Present</option>
+                            <option>❌ Absent</option>
+                        </select>
+                        <button class="w-full bg-[#1e293b] text-white py-4 rounded-2xl font-bold text-lg">Save Entry</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="section-expense" class="app-section hidden">
+                <div class="bg-white p-8 rounded-[2.5rem] shadow-xl text-center">
+                    <h2 class="text-2xl font-bold mb-4">Expense Tracker</h2>
+                    <p class="text-slate-500">Expense data entries will appear here.</p>
+                </div>
+            </div>
+
+            <div id="section-credit" class="app-section hidden">
+                <div class="bg-white p-8 rounded-[2.5rem] shadow-xl text-center">
+                    <h2 class="text-2xl font-bold mb-4">Credit-Debit Tracker</h2>
+                    <p class="text-slate-500">Balance and transaction data.</p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCYLZPXpFyi_akpP_jH543osgTOQU4V1iA",
+            authDomain: "finance-40f69.firebaseapp.com",
+            projectId: "finance-40f69",
+            appId: "1:846297335798:web:a6be2018e40f6a058b29d7"
         };
 
-        window.deleteItem = (id) => { 
-            if(confirm("Delete this expense?")) {
-                const transaction = db.transaction([STORE_NAME], "readwrite");
-                const store = transaction.objectStore(STORE_NAME);
-                store.delete(id);
-                transaction.oncomplete = () => loadFromDB();
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const provider = new GoogleAuthProvider();
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                document.getElementById('loginOverlay').classList.add('hidden');
+                document.getElementById('mainContent').classList.remove('hidden');
+                document.getElementById('userName').innerText = user.displayName;
+            } else {
+                document.getElementById('loginOverlay').classList.remove('hidden');
+                document.getElementById('mainContent').classList.add('hidden');
             }
-        };
+        });
 
-        window.onload = () => {
-            document.getElementById('exp-date').valueAsDate = new Date();
-        };
+        document.getElementById('googleSignInBtn').onclick = () => signInWithPopup(auth, provider);
+        document.getElementById('logoutBtn').onclick = () => signOut(auth);
+    </script>
+
+    <script>
+        function switchSection(sectionId) {
+            // Hide all sections
+            document.querySelectorAll('.app-section').forEach(sec => sec.classList.add('hidden'));
+            
+            // Show selected section
+            document.getElementById('section-' + sectionId).classList.remove('hidden');
+
+            // Update Nav Button colors
+            document.querySelectorAll('.top-nav button').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('nav-' + sectionId).classList.add('active');
+        }
     </script>
 </body>
 </html>
