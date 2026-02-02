@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Work Log | Attendance & OT</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 min-h-screen font-sans">
+
+    <div id="app-content" class="max-w-md mx-auto pb-20">
+        <header class="bg-white border-b p-6 sticky top-0 z-10 flex justify-between items-center shadow-sm">
+            <div>
+                <h1 class="text-xl font-black text-blue-600">Attendance</h1>
+            </div>
+            <div class="text-right">
+                <p class="text-[10px] font-bold text-slate-400 uppercase">This Month OT</p>
+                <h2 id="current-ot-total" class="text-xl font-black text-blue-600">0 hrs</h2>
+            </div>
+        </header>
+
+        <section class="p-4 grid grid-cols-3 gap-2">
+            <div class="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm text-center">
+                <p id="m2-name" class="text-[9px] font-bold text-slate-400 uppercase">--</p>
+                <h3 id="m2-ot" class="text-sm font-black text-slate-700">0</h3>
+            </div>
+            <div class="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm text-center">
+                <p id="m1-name" class="text-[9px] font-bold text-slate-400 uppercase">--</p>
+                <h3 id="m1-ot" class="text-sm font-black text-slate-700">0</h3>
+            </div>
+            <div class="bg-blue-600 p-3 rounded-2xl shadow-md text-center text-white">
+                <p class="text-[9px] font-bold uppercase opacity-80">Present</p>
+                <h3 id="present-count" class="text-sm font-black">0</h3>
+            </div>
+        </section>
+
+        <section class="px-4 pb-4">
+            <div class="bg-white rounded-2xl border p-5 shadow-sm">
+                <form id="attendance-form" class="space-y-4">
+                    <div class="grid grid-cols-2 gap-3">
+                        <input type="date" id="att-date" class="bg-slate-50 rounded-xl p-3 text-sm outline-none border focus:border-blue-300">
+                        <select id="status" class="bg-slate-50 rounded-xl p-3 text-sm outline-none border">
+                            <option value="Present">✅ Present</option>
+                            <option value="Absent">❌ Absent</option>
+                            <option value="Late">⏰ Late</option>
+                        </select>
+                    </div>
+                    <div id="ot-container" class="flex items-center gap-3 bg-blue-50 p-3 rounded-xl border border-blue-100">
+                        <label class="text-xs font-bold text-blue-700 uppercase">OT (Hrs):</label>
+                        <input type="number" id="ot-hours" step="0.5" value="0" class="w-20 bg-white rounded-lg p-2 text-sm outline-none font-bold">
+                    </div>
+                    <button type="submit" id="submit-btn" class="w-full bg-slate-900 text-white font-bold py-3 rounded-xl hover:bg-black transition-all">Save Entry</button>
+                </form>
+            </div>
+        </section>
+
+        <section id="attendance-list" class="px-4 space-y-3"></section>
+    </div>
+
+    <script>
+        let attendanceData = [];
+
+        // UI Initializer
+        window.onload = () => {
+            document.getElementById('att-date').valueAsDate = new Date();
+            renderData();
+        };
+
+        // Toggle OT input visibility
+        document.getElementById('status').addEventListener('change', (e) => {
+            document.getElementById('ot-container').style.display = (e.target.value === 'Present') ? 'flex' : 'none';
+        });
+
+        function renderData() {
+            let html = '';
+            let stats = { curP: 0, curOT: 0, m1OT: 0, m2OT: 0 };
+            const now = new Date();
+
+            // Sort data by date descending
+            attendanceData.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            attendanceData.forEach((entry, index) => {
+                const date = new Date(entry.date);
+                const ot = parseFloat(entry.otHours) || 0;
+                
+                // Monthly stats logic
+                if (date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear()) {
+                    if(entry.status === 'Present') stats.curP++;
+                    stats.curOT += ot;
+                } else if (date.getMonth() === (now.getMonth() - 1)) {
+                    stats.m1OT += ot;
+                } else if (date.getMonth() === (now.getMonth() - 2)) {
+                    stats.m2OT += ot;
+                }
+
+                html += `
+                    <div class="bg-white p-4 rounded-2xl flex justify-between items-center shadow-sm border border-slate-100">
+                        <div class="flex items-center gap-3">
+                            <div class="bg-slate-100 text-[9px] font-bold p-2 rounded-lg text-slate-500 text-center uppercase">
+                                ${date.toLocaleDateString('en-GB', {day:'2-digit', month:'short'}).replace(' ', '<br>')}
+                            </div>
+                            <p class="text-sm font-bold ${entry.status === 'Present' ? 'text-green-600' : 'text-red-500'}">${entry.status} ${ot > 0 ? `(+${ot} hrs)` : ''}</p>
+                        </div>
+                        <button onclick="deleteAtt(${index})" class="text-slate-200 hover:text-red-500 transition-colors">✕</button>
+                    </div>`;
+            });
+
+            document.getElementById('attendance-list').innerHTML = html;
+            document.getElementById('present-count').innerText = stats.curP;
+            document.getElementById('current-ot-total').innerText = stats.curOT + " hrs";
+            document.getElementById('m1-ot').innerText = stats.m1OT;
+            document.getElementById('m2-ot').innerText = stats.m2OT;
+
+            // Set month names
+            const d1 = new Date(); d1.setMonth(now.getMonth() - 1);
+            const d2 = new Date(); d2.setMonth(now.getMonth() - 2);
+            document.getElementById('m1-name').innerText = d1.toLocaleString('default', { month: 'short' });
+            document.getElementById('m2-name').innerText = d2.toLocaleString('default', { month: 'short' });
+        }
+
+        document.getElementById('attendance-form').onsubmit = (e) => {
+            e.preventDefault();
+            const dateInput = document.getElementById('att-date').value;
+            
+            if (attendanceData.some(entry => entry.date === dateInput)) {
+                alert("Only one entry per day allowed!");
+                return;
+            }
+
+            const newEntry = {
+                date: dateInput,
+                status: document.getElementById('status').value,
+                otHours: document.getElementById('status').value === 'Present' ? parseFloat(document.getElementById('ot-hours').value) : 0
+            };
+
+            attendanceData.push(newEntry);
+            renderData();
+
+            e.target.reset();
+            document.getElementById('att-date').valueAsDate = new Date();
+            document.getElementById('status').value = 'Present';
+            document.getElementById('ot-container').style.display = 'flex';
+        };
+
+        window.deleteAtt = (index) => { 
+            if(confirm("Delete this log?")) {
+                attendanceData.splice(index, 1);
+                renderData();
+            }
+        };
+    </script>
+</body>
+</html>

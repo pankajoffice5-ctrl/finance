@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TaskFlow | Minimal Manager</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .task-done { text-decoration: line-through; opacity: 0.5; }
+        .custom-checkbox:checked + div { background-color: #10b981; border-color: #10b981; }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen pb-10">
+
+    <header class="bg-white border-b border-slate-200 p-6 sticky top-0 z-30">
+        <div class="max-w-md mx-auto flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-800 text-slate-900 tracking-tight">My Tasks</h1>
+                <p id="stats" class="text-xs font-semibold text-slate-400 uppercase tracking-wider">0 items left</p>
+            </div>
+            <div class="relative h-12 w-12 flex items-center justify-center">
+                <svg class="h-full w-full transform -rotate-90">
+                    <circle cx="24" cy="24" r="20" stroke="currentColor" stroke-width="4" fill="transparent" class="text-slate-100" />
+                    <circle id="progress-circle" cx="24" cy="24" r="20" stroke="currentColor" stroke-width="4" fill="transparent" stroke-dasharray="125.6" stroke-dashoffset="125.6" class="text-indigo-600 transition-all duration-500" />
+                </svg>
+                <span id="progress-text" class="absolute text-[10px] font-bold text-slate-700">0%</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-md mx-auto p-4 space-y-6">
+        
+        <div class="bg-white rounded-3xl p-4 shadow-xl shadow-slate-200/50 border border-slate-100">
+            <form id="taskForm" class="space-y-3">
+                <input type="text" id="taskInput" placeholder="What needs to be done?" 
+                       class="w-full p-4 rounded-2xl bg-slate-50 border-none outline-none focus:ring-2 ring-indigo-100 font-semibold text-slate-700 transition-all" required>
+                
+                <div class="flex gap-2">
+                    <select id="category" class="bg-slate-50 px-4 py-3 rounded-xl text-xs font-bold text-slate-500 outline-none uppercase tracking-widest">
+                        <option value="Personal">Personal</option>
+                        <option value="Work">Work</option>
+                        <option value="Urgent">Urgent</option>
+                    </select>
+                    <button type="submit" class="flex-1 bg-indigo-600 text-white font-bold py-3 rounded-xl hover:bg-indigo-700 active:scale-95 transition-all">Add Task</button>
+                </div>
+            </form>
+        </div>
+
+        <div id="taskList" class="space-y-3">
+            </div>
+
+    </main>
+
+    <script>
+        let tasks = JSON.parse(localStorage.getItem('myTasks')) || [];
+
+        const taskForm = document.getElementById('taskForm');
+        const taskList = document.getElementById('taskList');
+        const stats = document.getElementById('stats');
+        const progressCircle = document.getElementById('progress-circle');
+        const progressText = document.getElementById('progress-text');
+
+        function updateStats() {
+            const completed = tasks.filter(t => t.done).length;
+            const total = tasks.length;
+            const percent = total === 0 ? 0 : Math.round((completed / total) * 100);
+            
+            // Update Circle (Circumference is ~125.6)
+            const offset = 125.6 - (percent / 100 * 125.6);
+            progressCircle.style.strokeDashoffset = offset;
+            progressText.innerText = `${percent}%`;
+            stats.innerText = `${total - completed} items left`;
+
+            localStorage.setItem('myTasks', JSON.stringify(tasks));
+        }
+
+        function renderTasks() {
+            taskList.innerHTML = '';
+            tasks.forEach((task, index) => {
+                const div = document.createElement('div');
+                div.className = `group flex items-center justify-between p-4 bg-white rounded-2xl border border-slate-100 shadow-sm transition-all hover:shadow-md ${task.done ? 'bg-slate-50/50' : ''}`;
+                
+                div.innerHTML = `
+                    <div class="flex items-center gap-4">
+                        <label class="relative flex items-center cursor-pointer">
+                            <input type="checkbox" ${task.done ? 'checked' : ''} onchange="toggleTask(${index})" 
+                                   class="custom-checkbox peer sr-only">
+                            <div class="w-6 h-6 border-2 border-slate-200 rounded-lg transition-all peer-checked:bg-indigo-600 peer-checked:border-indigo-600"></div>
+                            <svg class="absolute w-4 h-4 text-white hidden peer-checked:block left-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                        </label>
+                        <div>
+                            <p class="font-bold text-slate-800 ${task.done ? 'task-done' : ''}">${task.text}</p>
+                            <span class="text-[9px] font-black uppercase tracking-widest ${task.category === 'Urgent' ? 'text-rose-500' : 'text-indigo-400'}">${task.category}</span>
+                        </div>
+                    </div>
+                    <button onclick="deleteTask(${index})" class="text-slate-300 hover:text-rose-500 transition-colors opacity-0 group-hover:opacity-100">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    </button>
+                `;
+                taskList.appendChild(div);
+            });
+            updateStats();
+        }
+
+        taskForm.addEventListener('submit', e => {
+            e.preventDefault();
+            const text = document.getElementById('taskInput').value;
+            const category = document.getElementById('category').value;
+            tasks.unshift({ text, category, done: false });
+            taskForm.reset();
+            renderTasks();
+        });
+
+        function toggleTask(index) {
+            tasks[index].done = !tasks[index].done;
+            renderTasks();
+        }
+
+        function deleteTask(index) {
+            tasks.splice(index, 1);
+            renderTasks();
+        }
+
+        renderTasks();
+    </script>
+</body>
+</html>
