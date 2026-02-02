@@ -7,26 +7,69 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; }
+        body { font-family: 'Inter', sans-serif; background-color: #0f172a; margin: 0; }
+        
         .glass-card {
             background: rgba(30, 41, 59, 0.5);
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.05);
         }
-        .login-card {
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+
+        /* Fixed Top Navigation Bar */
+        .fixed-nav {
+            background-color: #dbeafe; 
+            display: flex;
+            overflow-x: auto;
+            white-space: nowrap;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid #bfdbfe;
+            scrollbar-width: none; 
         }
+        .fixed-nav::-webkit-scrollbar { display: none; }
+
+        .nav-item {
+            padding: 14px 20px;
+            font-size: 14px;
+            font-weight: 700;
+            color: #1e293b;
+            transition: all 0.2s;
+            cursor: pointer;
+            border: none;
+            background: none;
+            outline: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-item.active {
+            background-color: #00aeef; 
+            color: white;
+        }
+
+        .content-section {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .hidden { display: none !important; }
     </style>
 </head>
-<body class="bg-[#0f172a] text-slate-200 min-h-screen flex flex-col items-center justify-center p-4">
+<body class="text-slate-200">
 
-    <div id="loginOverlay" class="fixed inset-0 z-50 flex items-center justify-center bg-[#0f172a] p-4 transition-opacity duration-500">
-        <div class="bg-white p-8 md:p-12 rounded-[2.5rem] login-card max-w-sm w-full text-center">
+    <div id="loginOverlay" class="fixed inset-0 z-[200] flex items-center justify-center bg-[#0f172a] p-4">
+        <div class="bg-white p-8 md:p-12 rounded-[2.5rem] shadow-2xl max-w-sm w-full text-center">
             <h1 class="text-[#1e293b] text-4xl font-extrabold mb-2 tracking-tight">My Finance Log</h1>
             <p class="text-slate-500 text-lg mb-10 font-medium">Sign in to manage your Money & Time</p>
             
-            <button id="googleSignInBtn" class="w-full bg-[#2563eb] hover:bg-blue-700 text-white font-bold py-4 px-6 rounded-2xl transition-all shadow-lg flex items-center justify-center gap-3 active:scale-95 group">
-                <svg class="w-6 h-6 fill-white group-hover:scale-110 transition-transform" viewBox="0 0 24 24">
+            <button id="googleSignInBtn" class="w-full bg-[#2563eb] hover:bg-blue-700 text-white font-bold py-4 px-6 rounded-2xl flex items-center justify-center gap-3 active:scale-95 transition-all">
+                <svg class="w-6 h-6 fill-white" viewBox="0 0 24 24">
                     <path d="M12.48 10.92v3.28h7.84c-.24 1.84-.908 3.152-2.108 4.088-1.2 1.08-3.08 1.892-5.732 1.892-4.432 0-8.04-3.608-8.04-8.04s3.608-8.04 8.04-8.04c2.424 0 4.256.956 5.568 2.224l2.308-2.308c-1.904-1.816-4.42-2.916-7.876-2.916-6.628 0-12 5.372-12 12s5.372 12 12 12c3.576 0 6.284-1.18 8.356-3.328 2.144-2.144 2.824-5.152 2.824-7.592 0-.72-.064-1.4-.184-2.04h-11.096z"/>
                 </svg>
                 Sign in with Google
@@ -34,127 +77,145 @@
             <p id="authError" class="text-red-500 text-xs mt-4 font-semibold hidden"></p>
         </div>
     </div>
-<a href="https://allcalculate.netlify.app/">🏠 Home</a>
-    <div id="mainContent" class="hidden max-w-4xl w-full">
-        <header class="flex flex-col md:flex-row justify-between items-center mb-12 gap-6">
-            <div class="text-center md:text-left">
-                <h1 class="text-4xl font-extrabold bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
-                    Smart Calc Dashboard
-                </h1>
-                <p class="text-slate-400 mt-1">
-                    Connected as: <span id="userName" class="text-emerald-400 font-semibold">...</span>
-                </p>
+
+    <div id="mainContent" class="hidden">
+        
+        <nav class="fixed-nav" id="topNav">
+            <a href="https://allcalculate.netlify.app/" class="nav-item border-r border-blue-200" title="Home">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+            </a>
+            <button class="nav-item active" onclick="switchSection('attendance', this)">Attendance Log</button>
+            <button class="nav-item" onclick="switchSection('expense', this)">Expense Tracker</button>
+            <button class="nav-item" onclick="switchSection('credit', this)">Credit-Debit</button>
+            <button class="nav-item" onclick="switchSection('budget', this)">Budget Tracker</button>
+            <button class="nav-item" onclick="switchSection('task', this)">Task Manager</button>
+            <button class="nav-item text-red-600 font-bold" id="logoutBtn">Logout</button>
+        </nav>
+
+        <div class="max-w-4xl mx-auto p-6">
+            <header class="mb-8 mt-4">
+                <h1 class="text-2xl font-extrabold text-white">Smart Calc Dashboard</h1>
+                <p class="text-emerald-400 text-sm font-semibold">User: <span id="userName">...</span></p>
+            </header>
+
+            <div id="section-attendance" class="content-section">
+                <div class="glass-card p-6 rounded-[2.5rem] max-w-md mx-auto">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-bold text-white">Attendance</h2>
+                        <div class="text-right">
+                            <span class="text-[10px] text-slate-400 block font-bold uppercase">This Month OT</span>
+                            <span class="text-blue-400 font-bold">0 hrs</span>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-3 mb-6">
+                        <div class="bg-white/5 p-4 rounded-2xl text-center border border-white/5">
+                            <span class="text-[10px] block font-bold text-slate-500 uppercase">Dec</span>
+                            <span class="font-bold text-xl text-white">0</span>
+                        </div>
+                        <div class="bg-white/5 p-4 rounded-2xl text-center border border-white/5">
+                            <span class="text-[10px] block font-bold text-slate-500 uppercase">Jan</span>
+                            <span class="font-bold text-xl text-white">0</span>
+                        </div>
+                        <div class="bg-blue-600 p-4 rounded-2xl text-center shadow-lg shadow-blue-500/20">
+                            <span class="text-[10px] block font-bold text-blue-100 uppercase">Present</span>
+                            <span class="font-bold text-xl text-white">1</span>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <input type="date" value="2026-02-02" class="w-full bg-slate-800 p-4 rounded-2xl border-none outline-none text-white focus:ring-2 focus:ring-blue-500">
+                        <select class="w-full bg-slate-800 p-4 rounded-2xl border-none outline-none text-white focus:ring-2 focus:ring-blue-500">
+                            <option>✅ Present</option>
+                            <option>❌ Absent</option>
+                        </select>
+                        <button class="w-full bg-white text-slate-900 py-4 rounded-2xl font-extrabold text-lg active:scale-95 transition-transform">
+                            Save Entry
+                        </button>
+                    </div>
+                </div>
             </div>
-            <button id="logoutBtn" class="bg-slate-800 hover:bg-red-500/20 hover:text-red-400 border border-slate-700 px-6 py-2 rounded-xl transition-all text-sm font-bold uppercase tracking-widest">
-                Logout
-            </button>
-        </header>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            
-            <a href="attendance.html" class="glass-card p-6 rounded-3xl hover:border-blue-500 transition-all group">
-                <div class="p-3 bg-blue-500/10 rounded-2xl text-blue-400 w-fit mb-4 group-hover:scale-110 transition-transform">
-                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <div id="section-expense" class="content-section hidden">
+                <div class="glass-card p-10 rounded-[2.5rem] text-center">
+                    <h2 class="text-2xl font-bold text-emerald-400">Expense Tracker</h2>
+                    <p class="text-slate-400 mt-2">Section for daily spending logs.</p>
                 </div>
-                <h3 class="text-xl font-bold text-white">Attendance Log</h3>
-                <p class="text-slate-400 text-sm mt-2">Track work hours and overtime shifts.</p>
-            </a>
+            </div>
 
-            <a href="expance.html" class="glass-card p-6 rounded-3xl hover:border-emerald-500 transition-all group">
-                <div class="p-3 bg-emerald-500/10 rounded-2xl text-emerald-400 w-fit mb-4 group-hover:scale-110 transition-transform">
-                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+            <div id="section-credit" class="content-section hidden">
+                <div class="glass-card p-10 rounded-[2.5rem] text-center">
+                    <h2 class="text-2xl font-bold text-cyan-400">Credit-Debit Tracker</h2>
+                    <p class="text-slate-400 mt-2">Manage balances and transactions.</p>
                 </div>
-                <h3 class="text-xl font-bold text-white">Expense Tracker</h3>
-                <p class="text-slate-400 text-sm mt-2">Monitor daily spending and analytics.</p>
-            </a>
+            </div>
 
-
-                        <a href="credit debit.html" class="glass-card p-6 rounded-3xl hover:border-emerald-500 transition-all group">
-                <div class="p-3 bg-emerald-500/10 rounded-2xl text-emerald-400 w-fit mb-4 group-hover:scale-110 transition-transform">
-                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+            <div id="section-budget" class="content-section hidden">
+                <div class="glass-card p-10 rounded-[2.5rem] text-center">
+                    <h2 class="text-2xl font-bold text-purple-400">Budget Tracker</h2>
+                    <p class="text-slate-400 mt-2">Plan your monthly savings.</p>
                 </div>
-                <h3 class="text-xl font-bold text-white">Credit-Debit Tracker</h3>
-                <p class="text-slate-400 text-sm mt-2">Monitor Credit-Debit</p>
-            </a>
+            </div>
 
-                        <a href="budget.html" class="glass-card p-6 rounded-3xl hover:border-emerald-500 transition-all group">
-                <div class="p-3 bg-emerald-500/10 rounded-2xl text-emerald-400 w-fit mb-4 group-hover:scale-110 transition-transform">
-                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+            <div id="section-task" class="content-section hidden">
+                <div class="glass-card p-10 rounded-[2.5rem] text-center">
+                    <h2 class="text-2xl font-bold text-amber-400">Task Manager</h2>
+                    <p class="text-slate-400 mt-2">Deadlines and priorities.</p>
                 </div>
-                <h3 class="text-xl font-bold text-white">Budget Tracker</h3>
-                <p class="text-slate-400 text-sm mt-2">Plan spending and analytics.</p>
-            </a>
-
-            <a href="tasks.html" class="glass-card p-6 rounded-3xl hover:border-purple-500 transition-all group">
-                <div class="p-3 bg-purple-500/10 rounded-2xl text-purple-400 w-fit mb-4 group-hover:scale-110 transition-transform">
-                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-                </div>
-                <h3 class="text-xl font-bold text-white">Task Manager</h3>
-                <p class="text-slate-400 text-sm mt-2">Manage priorities and deadlines.</p>
-            </a>
+            </div>
 
         </div>
-
-        <footer class="mt-16 text-center text-slate-500 text-xs tracking-widest uppercase">
-            &copy; 2026 Smart Calc Engineering • Secure Environment
-        </footer>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCYLZPXpFyi_akpP_jH543osgTOQU4V1iA",
             authDomain: "finance-40f69.firebaseapp.com",
-            databaseURL: "https://finance-40f69-default-rtdb.firebaseio.com",
             projectId: "finance-40f69",
-            storageBucket: "finance-40f69.firebasestorage.app",
-            messagingSenderId: "846297335798",
-            appId: "1:846297335798:web:a6be2018e40f6a058b29d7",
-            measurementId: "G-GPTK97JDY5"
+            appId: "1:846297335798:web:a6be2018e40f6a058b29d7"
         };
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const provider = new GoogleAuthProvider();
 
-        const loginOverlay = document.getElementById('loginOverlay');
-        const mainContent = document.getElementById('mainContent');
-        const signInBtn = document.getElementById('googleSignInBtn');
-        const userNameDisp = document.getElementById('userName');
+        // Handle the login result after redirect
+        getRedirectResult(auth).catch((error) => {
+            console.error("Login Error:", error);
+            const errEl = document.getElementById('authError');
+            errEl.innerText = "Login Failed. Ensure you are using a standard browser like Chrome.";
+            errEl.classList.remove('hidden');
+        });
 
-        // Logic to toggle between Login and Dashboard
         onAuthStateChanged(auth, (user) => {
+            const loginOverlay = document.getElementById('loginOverlay');
+            const mainContent = document.getElementById('mainContent');
             if (user) {
-                loginOverlay.style.opacity = '0';
-                setTimeout(() => {
-                    loginOverlay.classList.add('hidden');
-                    mainContent.classList.remove('hidden');
-                    userNameDisp.innerText = user.displayName || user.email;
-                }, 500);
+                loginOverlay.classList.add('hidden');
+                mainContent.classList.remove('hidden');
+                document.getElementById('userName').innerText = user.displayName || user.email;
             } else {
                 loginOverlay.classList.remove('hidden');
-                loginOverlay.style.opacity = '1';
                 mainContent.classList.add('hidden');
             }
         });
 
-        // Trigger Google Login
-        signInBtn.addEventListener('click', async () => {
-            try {
-                await signInWithPopup(auth, provider);
-            } catch (error) {
-                const errEl = document.getElementById('authError');
-                errEl.innerText = "Authentication Failed. Try again.";
-                errEl.classList.remove('hidden');
-                console.error(error);
-            }
-        });
+        // Trigger Redirect Login (Fixed for disallowed_useragent)
+        document.getElementById('googleSignInBtn').onclick = () => signInWithRedirect(auth, provider);
+        document.getElementById('logoutBtn').onclick = () => signOut(auth);
 
-        // Logout Event
-        document.getElementById('logoutBtn').addEventListener('click', () => signOut(auth));
+        // UI Section Switcher
+        window.switchSection = (sectionId, btnElement) => {
+            document.querySelectorAll('.content-section').forEach(s => s.classList.add('hidden'));
+            const target = document.getElementById('section-' + sectionId);
+            if (target) target.classList.remove('hidden');
+
+            document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+            if (btnElement) btnElement.classList.add('active');
+        };
     </script>
-
 </body>
 </html>
