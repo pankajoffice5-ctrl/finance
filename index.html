@@ -5,156 +5,88 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Smart Calc | Finance & Analytics</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; }
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
         .glass-card {
-            background: rgba(30, 41, 59, 0.5);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
+            background: rgba(30, 41, 59, 0.4);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
         }
-        .login-card {
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        .glass-card:hover {
+            background: rgba(30, 41, 59, 0.6);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-4px);
         }
     </style>
 </head>
-<body class="bg-[#0f172a] text-slate-200 min-h-screen flex flex-col items-center justify-center p-4">
+<body class="bg-[#020617] text-slate-200 min-h-screen p-6">
 
-    <div id="loginOverlay" class="fixed inset-0 z-50 flex items-center justify-center bg-[#0f172a] p-4 transition-opacity duration-500">
-        <div class="bg-white p-8 md:p-12 rounded-[2.5rem] login-card max-w-sm w-full text-center">
-            <h1 class="text-[#1e293b] text-4xl font-extrabold mb-2 tracking-tight">My Finance Log</h1>
-            <p class="text-slate-500 text-lg mb-10 font-medium">Sign in to manage your Money & Time</p>
-            
-            <button id="googleSignInBtn" class="w-full bg-[#2563eb] hover:bg-blue-700 text-white font-bold py-4 px-6 rounded-2xl transition-all shadow-lg flex items-center justify-center gap-3 active:scale-95 group">
-                <svg class="w-6 h-6 fill-white group-hover:scale-110 transition-transform" viewBox="0 0 24 24">
-                    <path d="M12.48 10.92v3.28h7.84c-.24 1.84-.908 3.152-2.108 4.088-1.2 1.08-3.08 1.892-5.732 1.892-4.432 0-8.04-3.608-8.04-8.04s3.608-8.04 8.04-8.04c2.424 0 4.256.956 5.568 2.224l2.308-2.308c-1.904-1.816-4.42-2.916-7.876-2.916-6.628 0-12 5.372-12 12s5.372 12 12 12c3.576 0 6.284-1.18 8.356-3.328 2.144-2.144 2.824-5.152 2.824-7.592 0-.72-.064-1.4-.184-2.04h-11.096z"/>
-                </svg>
-                Sign in with Google
-            </button>
-            <p id="authError" class="text-red-500 text-xs mt-4 font-semibold hidden"></p>
-        </div>
-    </div>
-<a href="https://allcalculate.netlify.app/">🏠 Home</a>
-    <div id="mainContent" class="hidden max-w-4xl w-full">
-        <header class="flex flex-col md:flex-row justify-between items-center mb-12 gap-6">
-            <div class="text-center md:text-left">
-                <h1 class="text-4xl font-extrabold bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
-                    Smart Calc Dashboard
-                </h1>
-                <p class="text-slate-400 mt-1">
-                    Connected as: <span id="userName" class="text-emerald-400 font-semibold">...</span>
-                </p>
-            </div>
-            <button id="logoutBtn" class="bg-slate-800 hover:bg-red-500/20 hover:text-red-400 border border-slate-700 px-6 py-2 rounded-xl transition-all text-sm font-bold uppercase tracking-widest">
-                Logout
-            </button>
+    <div class="max-w-4xl mx-auto">
+        <nav class="flex justify-between items-center mb-12">
+            <a href="https://allcalculate.netlify.app/" class="text-xs font-bold text-slate-500 hover:text-emerald-400 transition-colors tracking-widest uppercase">
+                🏠 Home
+            </a>
+            <div class="h-8 w-8 rounded-full bg-gradient-to-tr from-emerald-400 to-cyan-400"></div>
+        </nav>
+
+        <header class="text-center md:text-left mb-12">
+            <h1 class="text-4xl md:text-5xl font-extrabold bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent tracking-tight">
+                Smart Calc
+            </h1>
+            <p class="text-slate-400 mt-2 text-lg">Your simplified financial toolkit.</p>
         </header>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             
-            <a href="attendance.html" class="glass-card p-6 rounded-3xl hover:border-blue-500 transition-all group">
-                <div class="p-3 bg-blue-500/10 rounded-2xl text-blue-400 w-fit mb-4 group-hover:scale-110 transition-transform">
-                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <a href="attendance.html" class="glass-card p-6 rounded-[2rem] transition-all group">
+                <div class="w-12 h-12 bg-blue-500/10 rounded-2xl flex items-center justify-center text-blue-400 mb-4 group-hover:bg-blue-500 group-hover:text-white transition-all">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 </div>
-                <h3 class="text-xl font-bold text-white">Attendance Log</h3>
-                <p class="text-slate-400 text-sm mt-2">Track work hours and overtime shifts.</p>
+                <h3 class="text-xl font-bold text-white">Attendance</h3>
+                <p class="text-slate-400 text-sm mt-1">Track work hours & shifts.</p>
             </a>
 
-            <a href="expance.html" class="glass-card p-6 rounded-3xl hover:border-emerald-500 transition-all group">
-                <div class="p-3 bg-emerald-500/10 rounded-2xl text-emerald-400 w-fit mb-4 group-hover:scale-110 transition-transform">
-                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+            <a href="expance.html" class="glass-card p-6 rounded-[2rem] transition-all group">
+                <div class="w-12 h-12 bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-400 mb-4 group-hover:bg-emerald-500 group-hover:text-white transition-all">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
                 </div>
-                <h3 class="text-xl font-bold text-white">Expense Tracker</h3>
-                <p class="text-slate-400 text-sm mt-2">Monitor daily spending and analytics.</p>
+                <h3 class="text-xl font-bold text-white">Expenses</h3>
+                <p class="text-slate-400 text-sm mt-1">Daily spending analytics.</p>
             </a>
 
-
-                        <a href="credit debit.html" class="glass-card p-6 rounded-3xl hover:border-emerald-500 transition-all group">
-                <div class="p-3 bg-emerald-500/10 rounded-2xl text-emerald-400 w-fit mb-4 group-hover:scale-110 transition-transform">
-                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+            <a href="credit debit.html" class="glass-card p-6 rounded-[2rem] transition-all group">
+                <div class="w-12 h-12 bg-amber-500/10 rounded-2xl flex items-center justify-center text-amber-400 mb-4 group-hover:bg-amber-500 group-hover:text-white transition-all">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
                 </div>
-                <h3 class="text-xl font-bold text-white">Credit-Debit Tracker</h3>
-                <p class="text-slate-400 text-sm mt-2">Monitor Credit-Debit</p>
+                <h3 class="text-xl font-bold text-white">Ledger</h3>
+                <p class="text-slate-400 text-sm mt-1">Manage Credit & Debit.</p>
             </a>
 
-                        <a href="budget.html" class="glass-card p-6 rounded-3xl hover:border-emerald-500 transition-all group">
-                <div class="p-3 bg-emerald-500/10 rounded-2xl text-emerald-400 w-fit mb-4 group-hover:scale-110 transition-transform">
-                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+            <a href="budget.html" class="glass-card p-6 rounded-[2rem] transition-all group">
+                <div class="w-12 h-12 bg-violet-500/10 rounded-2xl flex items-center justify-center text-violet-400 mb-4 group-hover:bg-violet-500 group-hover:text-white transition-all">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/></svg>
                 </div>
-                <h3 class="text-xl font-bold text-white">Budget Tracker</h3>
-                <p class="text-slate-400 text-sm mt-2">Plan spending and analytics.</p>
+                <h3 class="text-xl font-bold text-white">Budget</h3>
+                <p class="text-slate-400 text-sm mt-1">Monthly plan allocation.</p>
             </a>
 
-            <a href="tasks.html" class="glass-card p-6 rounded-3xl hover:border-purple-500 transition-all group">
-                <div class="p-3 bg-purple-500/10 rounded-2xl text-purple-400 w-fit mb-4 group-hover:scale-110 transition-transform">
-                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+            <a href="tasks.html" class="glass-card p-6 rounded-[2rem] transition-all group">
+                <div class="w-12 h-12 bg-rose-500/10 rounded-2xl flex items-center justify-center text-rose-400 mb-4 group-hover:bg-rose-500 group-hover:text-white transition-all">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                 </div>
-                <h3 class="text-xl font-bold text-white">Task Manager</h3>
-                <p class="text-slate-400 text-sm mt-2">Manage priorities and deadlines.</p>
+                <h3 class="text-xl font-bold text-white">Tasks</h3>
+                <p class="text-slate-400 text-sm mt-1">Priorities & deadlines.</p>
             </a>
 
         </div>
 
-        <footer class="mt-16 text-center text-slate-500 text-xs tracking-widest uppercase">
-            &copy; 2026 Smart Calc Engineering • Secure Environment
+        <footer class="mt-20 text-center">
+            <p class="text-[10px] text-slate-600 font-bold uppercase tracking-[0.2em]">
+                Simple Calc Engineering • 2026
+            </p>
         </footer>
     </div>
-
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyCYLZPXpFyi_akpP_jH543osgTOQU4V1iA",
-            authDomain: "finance-40f69.firebaseapp.com",
-            databaseURL: "https://finance-40f69-default-rtdb.firebaseio.com",
-            projectId: "finance-40f69",
-            storageBucket: "finance-40f69.firebasestorage.app",
-            messagingSenderId: "846297335798",
-            appId: "1:846297335798:web:a6be2018e40f6a058b29d7",
-            measurementId: "G-GPTK97JDY5"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const provider = new GoogleAuthProvider();
-
-        const loginOverlay = document.getElementById('loginOverlay');
-        const mainContent = document.getElementById('mainContent');
-        const signInBtn = document.getElementById('googleSignInBtn');
-        const userNameDisp = document.getElementById('userName');
-
-        // Logic to toggle between Login and Dashboard
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                loginOverlay.style.opacity = '0';
-                setTimeout(() => {
-                    loginOverlay.classList.add('hidden');
-                    mainContent.classList.remove('hidden');
-                    userNameDisp.innerText = user.displayName || user.email;
-                }, 500);
-            } else {
-                loginOverlay.classList.remove('hidden');
-                loginOverlay.style.opacity = '1';
-                mainContent.classList.add('hidden');
-            }
-        });
-
-        // Trigger Google Login
-        signInBtn.addEventListener('click', async () => {
-            try {
-                await signInWithPopup(auth, provider);
-            } catch (error) {
-                const errEl = document.getElementById('authError');
-                errEl.innerText = "Authentication Failed. Try again.";
-                errEl.classList.remove('hidden');
-                console.error(error);
-            }
-        });
-
-        // Logout Event
-        document.getElementById('logoutBtn').addEventListener('click', () => signOut(auth));
-    </script>
 
 </body>
 </html>
