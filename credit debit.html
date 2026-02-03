@@ -6,102 +6,178 @@
     <title>Credit & Debit Ledger</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
         body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
     </style>
 </head>
-<a href="https://pankajoffice5-ctrl.github.io/finance/">🏠 Back</a>
 <body class="bg-slate-50 min-h-screen pb-10">
 
-    <header class="bg-indigo-600 p-6 text-white shadow-lg sticky top-0 z-30">
-        <div class="max-w-md mx-auto text-center">
-            <h1 class="text-xl font-black uppercase tracking-tighter">My Ledger</h1>
-            <p class="text-[10px] opacity-70 font-bold uppercase tracking-widest">Financial Tracker</p>
+    <div id="login-screen" class="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center p-6 text-center">
+        <div class="w-16 h-16 bg-indigo-600 rounded-2xl mb-4 flex items-center justify-center shadow-lg">
+            <span class="text-white text-3xl font-black">₹</span>
         </div>
-    </header>
+        <h1 class="text-2xl font-black text-slate-800 mb-2">My Ledger</h1>
+        <p class="text-slate-500 mb-8 text-sm">Sign in to sync your financial records</p>
+        <button onclick="signInWithGoogle()" class="flex items-center gap-3 bg-white border border-slate-300 px-6 py-3 rounded-xl font-bold shadow-sm hover:bg-slate-50 transition-all">
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/0/google.svg" width="20">
+            Continue with Google
+        </button>
+    </div>
 
-    <main class="max-w-md mx-auto p-4 space-y-4">
-        
-        <div class="grid grid-cols-2 gap-3">
-            <div class="bg-emerald-500 text-white p-4 rounded-3xl shadow-md">
-                <p class="text-[10px] font-bold uppercase opacity-80">Total Credit</p>
-                <h2 id="total-credit" class="text-2xl font-black">₹0</h2>
-            </div>
-            <div class="bg-rose-500 text-white p-4 rounded-3xl shadow-md">
-                <p class="text-[10px] font-bold uppercase opacity-80">Total Debit</p>
-                <h2 id="total-debit" class="text-2xl font-black">₹0</h2>
-            </div>
-        </div>
-
-        <div class="bg-white p-4 rounded-3xl shadow-sm border border-slate-200 text-center">
-            <p class="text-[10px] font-black text-slate-400 uppercase mb-1">Current Balance</p>
-            <h2 id="net-balance" class="text-4xl font-black text-indigo-600">₹0</h2>
-        </div>
-
-        <div class="bg-white p-4 rounded-3xl shadow-sm border border-slate-200">
-            <canvas id="balanceChart" height="200"></canvas>
-        </div>
-
-        <div class="bg-white rounded-3xl p-5 shadow-lg border border-slate-200">
-            <form id="ledgerForm" class="space-y-4">
-                <input type="text" id="desc" placeholder="What for? (e.g. Salary, Rent)" class="w-full bg-slate-100 p-3 rounded-xl text-sm outline-none font-bold" required>
-                
-                <div class="grid grid-cols-2 gap-3">
-                    <input type="number" id="amount" placeholder="Amount" min="1" class="bg-slate-100 p-3 rounded-xl text-sm outline-none font-bold" required>
-                    <select id="type" class="bg-slate-100 p-3 rounded-xl text-sm outline-none font-bold text-slate-700">
-                        <option value="credit">Credit (+)</option>
-                        <option value="debit">Debit (-)</option>
-                    </select>
+    <div id="app-content" class="hidden">
+        <header class="bg-indigo-600 p-6 text-white shadow-lg sticky top-0 z-30">
+            <div class="max-w-md mx-auto flex justify-between items-center">
+                <div class="text-left">
+                    <h1 class="text-xl font-black uppercase tracking-tighter">My Ledger</h1>
+                    <p class="text-[10px] opacity-70 font-bold uppercase tracking-widest text-white">Cloud Synced</p>
                 </div>
-
-                <button type="submit" class="w-full bg-indigo-600 text-white font-bold py-4 rounded-2xl shadow-xl active:scale-95 transition-all">Add Transaction</button>
-            </form>
-        </div>
-
-        <div class="space-y-2" id="transaction-list">
+                <button onclick="signOut()" class="text-[10px] font-black bg-indigo-700 px-3 py-1 rounded-full uppercase">Logout</button>
             </div>
-    </main>
+        </header>
+
+        <main class="max-w-md mx-auto p-4 space-y-4">
+            
+            <div class="grid grid-cols-2 gap-3">
+                <div class="bg-emerald-500 text-white p-4 rounded-3xl shadow-md">
+                    <p class="text-[10px] font-bold uppercase opacity-80">Total Credit</p>
+                    <h2 id="total-credit" class="text-2xl font-black">₹0</h2>
+                </div>
+                <div class="bg-rose-500 text-white p-4 rounded-3xl shadow-md">
+                    <p class="text-[10px] font-bold uppercase opacity-80">Total Debit</p>
+                    <h2 id="total-debit" class="text-2xl font-black">₹0</h2>
+                </div>
+            </div>
+
+            <div class="bg-white p-4 rounded-3xl shadow-sm border border-slate-200 text-center">
+                <p class="text-[10px] font-black text-slate-400 uppercase mb-1">Current Balance</p>
+                <h2 id="net-balance" class="text-4xl font-black text-indigo-600">₹0</h2>
+            </div>
+
+            <div class="bg-white p-4 rounded-3xl shadow-sm border border-slate-200">
+                <canvas id="balanceChart" height="200"></canvas>
+            </div>
+
+            <div class="bg-white rounded-3xl p-5 shadow-lg border border-slate-200">
+                <form id="ledgerForm" class="space-y-4">
+                    <input type="text" id="desc" placeholder="What for? (e.g. Salary, Rent)" class="w-full bg-slate-100 p-3 rounded-xl text-sm outline-none font-bold" required>
+                    
+                    <div class="grid grid-cols-2 gap-3">
+                        <input type="number" id="amount" placeholder="Amount" min="1" class="bg-slate-100 p-3 rounded-xl text-sm outline-none font-bold" required>
+                        <select id="type" class="bg-slate-100 p-3 rounded-xl text-sm outline-none font-bold text-slate-700">
+                            <option value="credit">Credit (+)</option>
+                            <option value="debit">Debit (-)</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="w-full bg-indigo-600 text-white font-bold py-4 rounded-2xl shadow-xl active:scale-95 transition-all">Add Transaction</button>
+                </form>
+            </div>
+
+            <div class="space-y-2" id="transaction-list"></div>
+        </main>
+    </div>
 
     <script>
-        let transactions = JSON.parse(localStorage.getItem('myLedger')) || [];
+        // --- 1. Firebase Config ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyD4sS0SXSdRkp6oxm7Lx_G_IMwxd2h1syQ",
+            authDomain: "credit-f2a8a.firebaseapp.com",
+            projectId: "credit-f2a8a",
+            storageBucket: "credit-f2a8a.firebasestorage.app",
+            messagingSenderId: "1019396268279",
+            appId: "1:1019396268279:web:7b9a4e05f1c473e73973f2"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        let currentUser = null;
         let myChart;
 
-        function updateUI() {
-            const list = document.getElementById('transaction-list');
-            const totalCreditEl = document.getElementById('total-credit');
-            const totalDebitEl = document.getElementById('total-debit');
-            const netBalanceEl = document.getElementById('net-balance');
+        // --- 2. Auth Logic ---
+        function signInWithGoogle() {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            auth.signInWithPopup(provider).catch(err => alert(err.message));
+        }
+
+        function signOut() {
+            auth.signOut();
+        }
+
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                currentUser = user;
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('app-content').classList.remove('hidden');
+                loadTransactions();
+            } else {
+                currentUser = null;
+                document.getElementById('login-screen').classList.remove('hidden');
+                document.getElementById('app-content').classList.add('hidden');
+            }
+        });
+
+        // --- 3. Firestore Operations ---
+        function loadTransactions() {
+            if (!currentUser) return;
             
+            db.collection("users").doc(currentUser.uid).collection("ledger")
+                .orderBy("timestamp", "desc")
+                .onSnapshot((snapshot) => {
+                    const data = [];
+                    snapshot.forEach(doc => data.push({ id: doc.id, ...doc.data() }));
+                    renderUI(data);
+                });
+        }
+
+        async function addTransaction(t) {
+            await db.collection("users").doc(currentUser.uid).collection("ledger").add({
+                ...t,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            });
+        }
+
+        async function deleteEntry(id) {
+            if(confirm("Delete this entry?")) {
+                await db.collection("users").doc(currentUser.uid).collection("ledger").doc(id).delete();
+            }
+        }
+
+        // --- 4. UI Logic ---
+        function renderUI(data) {
+            const list = document.getElementById('transaction-list');
             list.innerHTML = '';
             let credit = 0;
             let debit = 0;
 
-            transactions.forEach((t, index) => {
+            data.forEach((t) => {
                 if(t.type === 'credit') credit += t.amount;
                 else debit += t.amount;
 
                 list.innerHTML += `
-                    <div class="bg-white p-4 rounded-2xl shadow-sm border-l-4 ${t.type === 'credit' ? 'border-emerald-500' : 'border-rose-500'} flex justify-between items-center">
+                    <div class="bg-white p-4 rounded-2xl shadow-sm border-l-4 ${t.type === 'credit' ? 'border-emerald-500' : 'border-rose-500'} flex justify-between items-center animate-in fade-in duration-300">
                         <div>
                             <p class="text-xs font-bold text-slate-400 uppercase">${t.date}</p>
                             <p class="font-black text-slate-800">${t.desc}</p>
                         </div>
                         <div class="flex items-center gap-4">
                             <span class="font-black ${t.type === 'credit' ? 'text-emerald-600' : 'text-rose-600'}">
-                                ${t.type === 'credit' ? '+' : '-'}₹${t.amount}
+                                ₹${t.amount}
                             </span>
-                            <button onclick="deleteEntry(${index})" class="text-slate-300 hover:text-rose-500 text-sm">✕</button>
+                            <button onclick="deleteEntry('${t.id}')" class="text-slate-300 hover:text-rose-500 text-sm">✕</button>
                         </div>
                     </div>
                 `;
             });
 
-            totalCreditEl.innerText = `₹${credit}`;
-            totalDebitEl.innerText = `₹${debit}`;
-            netBalanceEl.innerText = `₹${credit - debit}`;
+            document.getElementById('total-credit').innerText = `₹${credit}`;
+            document.getElementById('total-debit').innerText = `₹${debit}`;
+            document.getElementById('net-balance').innerText = `₹${credit - debit}`;
             
-            localStorage.setItem('myLedger', JSON.stringify(transactions));
             updateChart(credit, debit);
         }
 
@@ -116,40 +192,28 @@
                     datasets: [{
                         data: [c, d],
                         backgroundColor: ['#10b981', '#f43f5e'],
-                        borderWidth: 0,
-                        hoverOffset: 4
+                        borderWidth: 0
                     }]
                 },
                 options: {
                     responsive: true,
                     plugins: {
-                        legend: { position: 'bottom', labels: { font: { weight: 'bold' } } }
+                        legend: { position: 'bottom', labels: { font: { weight: 'bold', family: 'Inter' } } }
                     }
                 }
             });
         }
 
-        document.getElementById('ledgerForm').addEventListener('submit', (e) => {
+        document.getElementById('ledgerForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const desc = document.getElementById('desc').value;
             const amount = parseFloat(document.getElementById('amount').value);
             const type = document.getElementById('type').value;
             const date = new Date().toLocaleDateString('en-GB');
 
-            transactions.unshift({ desc, amount, type, date });
+            await addTransaction({ desc, amount, type, date });
             e.target.reset();
-            updateUI();
         });
-
-        function deleteEntry(index) {
-            if(confirm("Delete this entry?")) {
-                transactions.splice(index, 1);
-                updateUI();
-            }
-        }
-
-        // Initialize
-        updateUI();
     </script>
 </body>
 </html>
