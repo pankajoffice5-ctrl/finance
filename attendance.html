@@ -5,14 +5,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Work Log | Attendance & OT</title>
     <script src="https://cdn.tailwindcss.com"></script>
-</head> 
-<a href="https://pankajoffice5-ctrl.github.io/finance/">🏠 Back</a>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+</head>
 <body class="bg-slate-50 min-h-screen font-sans">
 
-    <div id="app-content" class="max-w-md mx-auto pb-20">
+    <div id="login-screen" class="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center p-6 text-center">
+        <h1 class="text-3xl font-black text-blue-600 mb-2">Work Log</h1>
+        <p class="text-slate-500 mb-8">Please sign in to manage your attendance</p>
+        <button onclick="signInWithGoogle()" class="flex items-center gap-3 bg-white border border-slate-300 px-6 py-3 rounded-xl font-bold shadow-sm hover:bg-slate-50 transition-all">
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/0/google.svg" width="20">
+            Sign in with Google
+        </button>
+    </div>
+
+    <div id="app-content" class="max-w-md mx-auto pb-20 hidden">
         <header class="bg-white border-b p-6 sticky top-0 z-10 flex justify-between items-center shadow-sm">
             <div>
                 <h1 class="text-xl font-black text-blue-600">Attendance</h1>
+                <button onclick="signOut()" class="text-[10px] text-red-500 font-bold uppercase">Logout</button>
             </div>
             <div class="text-right">
                 <p class="text-[10px] font-bold text-slate-400 uppercase">This Month OT</p>
@@ -59,54 +71,105 @@
     </div>
 
     <script>
-        let db;
-        const DB_NAME = "AttendanceDB";
-        const STORE_NAME = "logs";
+        // --- 1. Firebase Configuration ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyCY-uSI1r3BxARYwGTvhTh2hYgAI-3yBeQ",
+            authDomain: "attendance-83fa2.firebaseapp.com",
+            databaseURL: "https://attendance-83fa2-default-rtdb.firebaseio.com",
+            projectId: "attendance-83fa2",
+            storageBucket: "attendance-83fa2.firebasestorage.app",
+            messagingSenderId: "877237859008",
+            appId: "1:877237859008:web:904ae7f4eea6823babb325"
+        };
 
-        // 1. Initialize IndexedDB
-        const request = indexedDB.open(DB_NAME, 1);
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        let currentUser = null;
 
-        request.onupgradeneeded = (e) => {
-            db = e.target.result;
-            if (!db.objectStoreNames.contains(STORE_NAME)) {
-                // We use 'date' as keyPath to prevent duplicate entries for the same day
-                db.createObjectStore(STORE_NAME, { keyPath: "date" });
+        // --- 2. Auth Logic ---
+        function signInWithGoogle() {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            auth.signInWithPopup(provider).catch(err => alert(err.message));
+        }
+
+        function signOut() {
+            auth.signOut();
+        }
+
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                currentUser = user;
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('app-content').classList.remove('hidden');
+                loadLogs();
+            } else {
+                currentUser = null;
+                document.getElementById('login-screen').classList.remove('hidden');
+                document.getElementById('app-content').classList.add('hidden');
             }
-        };
+        });
 
-        request.onsuccess = (e) => {
-            db = e.target.result;
-            loadLogs();
-        };
+        // --- 3. Data Logic (Firestore) ---
+        function loadLogs() {
+            if (!currentUser) return;
+            
+            db.collection("users").doc(currentUser.uid).collection("logs")
+                .orderBy("date", "desc")
+                .onSnapshot((snapshot) => {
+                    const logs = [];
+                    snapshot.forEach(doc => logs.push(doc.data()));
+                    renderData(logs);
+                });
+        }
 
-        // UI Helpers
+        async function saveEntry(newEntry) {
+            try {
+                // Using the date as the document ID ensures one entry per day
+                await db.collection("users").doc(currentUser.uid)
+                        .collection("logs").doc(newEntry.date).set(newEntry);
+            } catch (error) {
+                console.error("Error saving:", error);
+                alert("Error saving to cloud.");
+            }
+        }
+
+        async function deleteAtt(dateId) {
+            if(confirm("Delete this log?")) {
+                await db.collection("users").doc(currentUser.uid)
+                        .collection("logs").doc(dateId).delete();
+            }
+        }
+
+        // --- 4. UI Logic (Modified from your original) ---
         document.getElementById('status').addEventListener('change', (e) => {
             document.getElementById('ot-container').style.display = (e.target.value === 'Present') ? 'flex' : 'none';
         });
 
-        function loadLogs() {
-            const transaction = db.transaction([STORE_NAME], "readonly");
-            const store = transaction.objectStore(STORE_NAME);
-            const getAll = store.getAll();
-
-            getAll.onsuccess = () => {
-                renderData(getAll.result);
+        document.getElementById('attendance-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const dateInput = document.getElementById('att-date').value;
+            const newEntry = {
+                date: dateInput,
+                status: document.getElementById('status').value,
+                otHours: document.getElementById('status').value === 'Present' ? parseFloat(document.getElementById('ot-hours').value) : 0
             };
-        }
+
+            await saveEntry(newEntry);
+            e.target.reset();
+            document.getElementById('att-date').valueAsDate = new Date();
+        };
 
         function renderData(data) {
             let html = '';
             let stats = { curP: 0, curOT: 0, m1OT: 0, m2OT: 0 };
             const now = new Date();
 
-            // Sort data by date descending
-            data.sort((a, b) => new Date(b.date) - new Date(a.date));
-
             data.forEach((entry) => {
                 const date = new Date(entry.date);
                 const ot = parseFloat(entry.otHours) || 0;
                 
-                // Monthly stats logic
                 const d1 = new Date(); d1.setMonth(now.getMonth() - 1);
                 const d2 = new Date(); d2.setMonth(now.getMonth() - 2);
 
@@ -139,48 +202,11 @@
             document.getElementById('m1-ot').innerText = stats.m1OT;
             document.getElementById('m2-ot').innerText = stats.m2OT;
 
-            // Set month names
             const d1 = new Date(); d1.setMonth(now.getMonth() - 1);
             const d2 = new Date(); d2.setMonth(now.getMonth() - 2);
             document.getElementById('m1-name').innerText = d1.toLocaleString('default', { month: 'short' });
             document.getElementById('m2-name').innerText = d2.toLocaleString('default', { month: 'short' });
         }
-
-        document.getElementById('attendance-form').onsubmit = (e) => {
-            e.preventDefault();
-            const dateInput = document.getElementById('att-date').value;
-
-            const newEntry = {
-                date: dateInput,
-                status: document.getElementById('status').value,
-                otHours: document.getElementById('status').value === 'Present' ? parseFloat(document.getElementById('ot-hours').value) : 0
-            };
-
-            const transaction = db.transaction([STORE_NAME], "readwrite");
-            const store = transaction.objectStore(STORE_NAME);
-            
-            // .put() will update the record if the date already exists, or add a new one
-            const request = store.put(newEntry);
-
-            request.onsuccess = () => {
-                e.target.reset();
-                document.getElementById('att-date').valueAsDate = new Date();
-                document.getElementById('status').value = 'Present';
-                document.getElementById('ot-container').style.display = 'flex';
-                loadLogs();
-            };
-
-            request.onerror = () => alert("Error saving to database.");
-        };
-
-        window.deleteAtt = (dateId) => { 
-            if(confirm("Delete this log?")) {
-                const transaction = db.transaction([STORE_NAME], "readwrite");
-                const store = transaction.objectStore(STORE_NAME);
-                store.delete(dateId);
-                transaction.oncomplete = () => loadLogs();
-            }
-        };
 
         window.onload = () => {
             document.getElementById('att-date').valueAsDate = new Date();
