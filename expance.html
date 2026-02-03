@@ -6,19 +6,31 @@
     <title>Expanse Tracker | Analytics</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <style>
         #cat-list::-webkit-scrollbar { width: 4px; }
         #cat-list::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         .filter-active { border: 2px solid #3b82f6 !important; }
     </style>
 </head>
-<a href="https://pankajoffice5-ctrl.github.io/finance/">🏠 Back</a>
 <body class="bg-slate-50 min-h-screen font-sans">
 
-    <div id="app-content" class="max-w-md mx-auto pb-20">
+    <div id="login-screen" class="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center p-6 text-center">
+        <h1 class="text-3xl font-black text-blue-600 mb-2">Expanse Trac</h1>
+        <p class="text-slate-500 mb-8">Track your spends in the cloud</p>
+        <button onclick="signInWithGoogle()" class="flex items-center gap-3 bg-white border border-slate-300 px-6 py-3 rounded-xl font-bold shadow-sm hover:bg-slate-50 transition-all">
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/0/google.svg" width="20">
+            Sign in with Google
+        </button>
+    </div>
+
+    <div id="app-content" class="max-w-md mx-auto pb-20 hidden">
         <header class="bg-white border-b p-6 sticky top-0 z-10 flex justify-between items-center shadow-sm">
             <div>
                 <h1 class="text-xl font-black text-blue-600">Expanse Trac</h1>
+                <button onclick="signOut()" class="text-[10px] text-red-500 font-bold uppercase">Logout</button>
             </div>
             <div class="text-right">
                 <p class="text-[10px] font-bold text-slate-400 uppercase">Lifetime Spend</p>
@@ -77,57 +89,72 @@
     </div>
 
     <script>
-        let db;
+        // --- 1. Firebase Config ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyDey9WxDaIKC0L7_gokZDvzB3_CI9RcktY",
+            authDomain: "expanse-c4af6.firebaseapp.com",
+            projectId: "expanse-c4af6",
+            storageBucket: "expanse-c4af6.firebasestorage.app",
+            messagingSenderId: "905257725570",
+            appId: "1:905257725570:web:3032ac0643e4332ef48e9b"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        let currentUser = null;
         let myChart = null;
         let activeFilter = null;
-        const DB_NAME = "ExpanseTracDB";
-        const STORE_NAME = "expenses";
 
-        // --- Database Initialization ---
-        const request = indexedDB.open(DB_NAME, 1);
-
-        request.onupgradeneeded = (e) => {
-            db = e.target.result;
-            if (!db.objectStoreNames.contains(STORE_NAME)) {
-                db.createObjectStore(STORE_NAME, { keyPath: "id", autoIncrement: true });
-            }
-        };
-
-        request.onsuccess = (e) => {
-            db = e.target.result;
-            initChart();
-            loadFromDB();
-        };
-
-        const categories = [
-            "🛒 Grocery", "🏥 Medical", "🛍️ Shopping", "🍽️ Food & Drink", 
-            "💧 Water", "🔥 Gas", "🚌 Transportation", "🏠 Rent", 
-            "📱 Phone & Internet", "👕 Cloths", "🎬 Entertainment", "🎁 Nevta", "📦 Other"
-        ];
-
-        // --- Category Logic ---
-        const catSearch = document.getElementById('cat-search');
-        const catList = document.getElementById('cat-list');
-        const hiddenCat = document.getElementById('selected-category');
-
-        function renderCategories(filter = "") {
-            const filtered = categories.filter(c => c.toLowerCase().includes(filter.toLowerCase()));
-            catList.innerHTML = filtered.map(c => 
-                `<div class="p-3 hover:bg-blue-50 cursor-pointer rounded-lg text-sm font-medium" onclick="selectCategory('${c}')">${c}</div>`
-            ).join('');
+        // --- 2. Authentication ---
+        function signInWithGoogle() {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            auth.signInWithPopup(provider).catch(err => alert(err.message));
         }
 
-        catSearch.onfocus = () => { renderCategories(); catList.classList.remove('hidden'); };
-        catSearch.oninput = (e) => renderCategories(e.target.value);
-        
-        window.selectCategory = (val) => {
-            catSearch.value = val;
-            hiddenCat.value = val;
-            catList.classList.add('hidden');
-        };
+        function signOut() {
+            auth.signOut();
+        }
 
-        // --- Chart & Filter ---
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                currentUser = user;
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('app-content').classList.remove('hidden');
+                initChart();
+                loadLogs();
+            } else {
+                currentUser = null;
+                document.getElementById('login-screen').classList.remove('hidden');
+                document.getElementById('app-content').classList.add('hidden');
+            }
+        });
+
+        // --- 3. Data Handling ---
+        function loadLogs() {
+            if (!currentUser) return;
+            db.collection("users").doc(currentUser.uid).collection("expenses")
+                .orderBy("date", "desc")
+                .onSnapshot((snapshot) => {
+                    const data = [];
+                    snapshot.forEach(doc => {
+                        data.push({ id: doc.id, ...doc.data() });
+                    });
+                    updateUI(data);
+                });
+        }
+
+        async function deleteItem(id) {
+            if(confirm("Delete this expense?")) {
+                await db.collection("users").doc(currentUser.uid).collection("expenses").doc(id).delete();
+            }
+        }
+
+        // --- 4. UI & Chart Logic ---
+        const categories = ["🛒 Grocery", "🏥 Medical", "🛍️ Shopping", "🍽️ Food & Drink", "💧 Water", "🔥 Gas", "🚌 Transportation", "🏠 Rent", "📱 Phone & Internet", "👕 Cloths", "🎬 Entertainment", "🎁 Nevta", "📦 Other"];
+
         function initChart() {
+            if (myChart) return;
             const ctx = document.getElementById('expenseChart').getContext('2d');
             myChart = new Chart(ctx, {
                 type: 'doughnut',
@@ -157,18 +184,7 @@
                 statusLabel.innerText = `Showing: ${category}`;
                 statusLabel.classList.remove('hidden');
             }
-            loadFromDB();
-        }
-
-        // --- Data Operations ---
-        function loadFromDB() {
-            const transaction = db.transaction([STORE_NAME], "readonly");
-            const store = transaction.objectStore(STORE_NAME);
-            const getAll = store.getAll();
-
-            getAll.onsuccess = () => {
-                updateUI(getAll.result);
-            };
+            loadLogs(); // Refresh view
         }
 
         function updateUI(data) {
@@ -182,13 +198,9 @@
             document.getElementById('m1-name').innerText = d1.toLocaleString('default', { month: 'short' });
             document.getElementById('m2-name').innerText = d2.toLocaleString('default', { month: 'short' });
 
-            // Sort data: Newest date first
-            data.sort((a, b) => new Date(b.date) - new Date(a.date));
-
             data.forEach((item) => {
                 const amount = parseFloat(item.amount) || 0;
                 const date = new Date(item.date);
-                
                 totals.lifetime += amount;
                 
                 if (date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear()) {
@@ -214,7 +226,7 @@
                             </div>
                             <div class="flex items-center gap-4">
                                 <span class="font-black text-slate-900">${amount.toFixed(2)}</span>
-                                <button onclick="deleteItem(${item.id})" class="text-slate-200 hover:text-red-500">✕</button>
+                                <button onclick="deleteItem('${item.id}')" class="text-slate-200 hover:text-red-500">✕</button>
                             </div>
                         </div>`;
                 }
@@ -231,7 +243,26 @@
             myChart.update();
         }
 
-        document.getElementById('expense-form').onsubmit = (e) => {
+        // --- 5. Form & Category Helpers ---
+        const catSearch = document.getElementById('cat-search');
+        const catList = document.getElementById('cat-list');
+        const hiddenCat = document.getElementById('selected-category');
+
+        function renderCategories(filter = "") {
+            const filtered = categories.filter(c => c.toLowerCase().includes(filter.toLowerCase()));
+            catList.innerHTML = filtered.map(c => 
+                `<div class="p-3 hover:bg-blue-50 cursor-pointer rounded-lg text-sm font-medium" onclick="selectCategory('${c}')">${c}</div>`
+            ).join('');
+        }
+
+        catSearch.onfocus = () => { renderCategories(); catList.classList.remove('hidden'); };
+        catSearch.oninput = (e) => renderCategories(e.target.value);
+        window.selectCategory = (val) => {
+            catSearch.value = val; hiddenCat.value = val;
+            catList.classList.add('hidden');
+        };
+
+        document.getElementById('expense-form').onsubmit = async (e) => {
             e.preventDefault();
             if(!hiddenCat.value) return alert("Select a Category");
             
@@ -239,28 +270,13 @@
                 category: hiddenCat.value,
                 description: document.getElementById('desc').value,
                 amount: parseFloat(document.getElementById('amount').value),
-                date: document.getElementById('exp-date').value // Store as YYYY-MM-DD
+                date: document.getElementById('exp-date').value
             };
 
-            const transaction = db.transaction([STORE_NAME], "readwrite");
-            const store = transaction.objectStore(STORE_NAME);
-            store.add(newExp);
-
-            transaction.oncomplete = () => {
-                e.target.reset();
-                catSearch.value = ""; hiddenCat.value = "";
-                document.getElementById('exp-date').valueAsDate = new Date();
-                loadFromDB();
-            };
-        };
-
-        window.deleteItem = (id) => { 
-            if(confirm("Delete this expense?")) {
-                const transaction = db.transaction([STORE_NAME], "readwrite");
-                const store = transaction.objectStore(STORE_NAME);
-                store.delete(id);
-                transaction.oncomplete = () => loadFromDB();
-            }
+            await db.collection("users").doc(currentUser.uid).collection("expenses").add(newExp);
+            e.target.reset();
+            catSearch.value = ""; hiddenCat.value = "";
+            document.getElementById('exp-date').valueAsDate = new Date();
         };
 
         window.onload = () => {
