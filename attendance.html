@@ -3,53 +3,97 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Work Log | Attendance & OT</title>
+    <title>Work Log | Salary & PDF</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body class="bg-slate-50 min-h-screen font-sans">
 
     <div id="login-screen" class="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center p-6 text-center">
         <h1 class="text-3xl font-black text-blue-600 mb-2">Work Log</h1>
-        <p class="text-slate-500 mb-8">Please sign in to manage your attendance</p>
+        <p class="text-slate-500 mb-8">Sign in to manage salary & attendance</p>
         <button onclick="signInWithGoogle()" class="flex items-center gap-3 bg-white border border-slate-300 px-6 py-3 rounded-xl font-bold shadow-sm hover:bg-slate-50 transition-all">
             <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/0/google.svg" width="20">
             Sign in with Google
         </button>
     </div>
-        <nav class="flex justify-between items-center mb-12">
-            <a href="https://esmartcalcfina.netlify.app/" class="text-xs font-bold text-slate-500 hover:text-emerald-400 transition-colors tracking-widest uppercase">
-                🏠 Back
-            </a>
-            <div class="h-8 w-8 rounded-full bg-gradient-to-tr from-emerald-400 to-cyan-400"></div>
-        </nav>
-    <div id="app-content" class="max-w-md mx-auto pb-20 hidden">
-        <header class="bg-white border-b p-6 sticky top-0 z-10 flex justify-between items-center shadow-sm">
-            <div>
-                <h1 class="text-xl font-black text-blue-600">Attendance</h1>
-                <button onclick="signOut()" class="text-[10px] text-red-500 font-bold uppercase">Logout</button>
-            </div>
-            <div class="text-right">
-                <p class="text-[10px] font-bold text-slate-400 uppercase">This Month OT</p>
-                <h2 id="current-ot-total" class="text-xl font-black text-blue-600">0 hrs</h2>
-            </div>
-        </header>
 
-        <section class="p-4 grid grid-cols-3 gap-2">
-            <div class="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm text-center">
-                <p id="m2-name" class="text-[9px] font-bold text-slate-400 uppercase">--</p>
-                <h3 id="m2-ot" class="text-sm font-black text-slate-700">0</h3>
+    <nav class="flex justify-between items-center mb-6 p-6">
+        <a href="#" class="text-xs font-bold text-slate-500 hover:text-blue-600 transition-colors tracking-widest uppercase">
+            🏠 Home
+        </a>
+        <div class="flex items-center gap-4">
+            <button onclick="signOut()" class="text-[10px] text-red-500 font-bold uppercase">Logout</button>
+            <div class="h-8 w-8 rounded-full bg-gradient-to-tr from-blue-500 to-cyan-400"></div>
+        </div>
+    </nav>
+
+    <div id="app-content" class="max-w-md mx-auto pb-24 hidden">
+        
+        <section class="px-4 grid grid-cols-3 gap-2 mb-4">
+            <div class="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm text-center flex flex-col justify-center">
+                <p id="m2-name" class="text-[9px] font-bold text-slate-400 uppercase mb-1">--</p>
+                <div class="flex justify-center items-center gap-2 text-xs font-bold text-slate-700">
+                    <span><span id="m2-p">0</span> P</span> | 
+                    <span><span id="m2-ot">0</span> OT</span>
+                </div>
             </div>
-            <div class="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm text-center">
-                <p id="m1-name" class="text-[9px] font-bold text-slate-400 uppercase">--</p>
-                <h3 id="m1-ot" class="text-sm font-black text-slate-700">0</h3>
+            <div class="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm text-center flex flex-col justify-center">
+                <p id="m1-name" class="text-[9px] font-bold text-slate-400 uppercase mb-1">--</p>
+                <div class="flex justify-center items-center gap-2 text-xs font-bold text-slate-700">
+                    <span><span id="m1-p">0</span> P</span> | 
+                    <span><span id="m1-ot">0</span> OT</span>
+                </div>
             </div>
-            <div class="bg-blue-600 p-3 rounded-2xl shadow-md text-center text-white">
-                <p class="text-[9px] font-bold uppercase opacity-80">Present</p>
-                <h3 id="present-count" class="text-sm font-black">0</h3>
+            <div class="bg-blue-600 p-3 rounded-2xl shadow-md text-center text-white flex flex-col justify-center">
+                <p class="text-[9px] font-bold uppercase opacity-80 mb-1">This Month</p>
+                <div class="flex justify-center items-center gap-2 text-sm font-black">
+                    <span><span id="cur-p">0</span> P</span>
+                    <span class="opacity-50">|</span>
+                    <span><span id="cur-ot">0</span> OT</span>
+                </div>
             </div>
+        </section>
+
+        <section class="px-4 mb-4">
+            <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm" id="salary-slip">
+                <div class="flex justify-between items-center mb-4 border-b pb-2">
+                    <h3 class="text-sm font-black text-slate-800 uppercase">💰 Salary Slip</h3>
+                    <p id="slip-month" class="text-xs text-slate-400 font-bold"></p>
+                </div>
+
+                <div class="mb-4">
+                    <label class="text-[10px] font-bold text-slate-400 uppercase">Monthly Basic Salary</label>
+                    <input type="number" id="basic-salary" placeholder="e.g. 3000" onkeyup="calculateSalary()" class="w-full text-lg font-black text-slate-800 border-b border-slate-200 focus:border-blue-500 outline-none py-1 bg-transparent">
+                    <p class="text-[9px] text-slate-400 mt-1">*Calculates based on 30 days / 8 hrs</p>
+                </div>
+
+                <div class="space-y-2 text-sm">
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">Base Pay (Present):</span>
+                        <span class="font-bold text-slate-800" id="calc-base">0.00</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">OT Pay:</span>
+                        <span class="font-bold text-green-600" id="calc-ot">0.00</span>
+                    </div>
+                    <div class="h-px bg-slate-100 my-2"></div>
+                    <div class="flex justify-between text-base">
+                        <span class="font-bold text-blue-600">Total Salary:</span>
+                        <span class="font-black text-blue-600" id="calc-total">0.00</span>
+                    </div>
+                </div>
+            </div>
+            
+            <button onclick="downloadPDF()" class="w-full mt-2 bg-slate-100 text-slate-600 text-xs font-bold py-2 rounded-lg hover:bg-slate-200 transition-colors flex justify-center items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                Download PDF Slip
+            </button>
         </section>
 
         <section class="px-4 pb-4">
@@ -87,11 +131,11 @@
             appId: "1:877237859008:web:904ae7f4eea6823babb325"
         };
 
-        // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore();
         let currentUser = null;
+        let globalStats = { curP: 0, curOT: 0 }; // Store for calculator
 
         // --- 2. Auth Logic ---
         function signInWithGoogle() {
@@ -108,6 +152,9 @@
                 currentUser = user;
                 document.getElementById('login-screen').classList.add('hidden');
                 document.getElementById('app-content').classList.remove('hidden');
+                // Load saved salary preference if possible, else 0
+                const savedSalary = localStorage.getItem('basicSalary');
+                if(savedSalary) document.getElementById('basic-salary').value = savedSalary;
                 loadLogs();
             } else {
                 currentUser = null;
@@ -116,7 +163,7 @@
             }
         });
 
-        // --- 3. Data Logic (Firestore) ---
+        // --- 3. Data Logic ---
         function loadLogs() {
             if (!currentUser) return;
             
@@ -131,12 +178,10 @@
 
         async function saveEntry(newEntry) {
             try {
-                // Using the date as the document ID ensures one entry per day
                 await db.collection("users").doc(currentUser.uid)
                         .collection("logs").doc(newEntry.date).set(newEntry);
             } catch (error) {
-                console.error("Error saving:", error);
-                alert("Error saving to cloud.");
+                alert("Error saving.");
             }
         }
 
@@ -147,7 +192,127 @@
             }
         }
 
-        // --- 4. UI Logic (Modified from your original) ---
+        // --- 4. Render & Stats Logic ---
+        function renderData(data) {
+            let html = '';
+            // Stats object now tracks P and OT for all 3 months
+            let stats = { 
+                curP: 0, curOT: 0, 
+                m1P: 0, m1OT: 0, 
+                m2P: 0, m2OT: 0 
+            };
+            const now = new Date();
+
+            data.forEach((entry) => {
+                const date = new Date(entry.date);
+                const ot = parseFloat(entry.otHours) || 0;
+                const isPresent = entry.status === 'Present';
+                
+                const d1 = new Date(); d1.setMonth(now.getMonth() - 1);
+                const d2 = new Date(); d2.setMonth(now.getMonth() - 2);
+
+                // Current Month
+                if (date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear()) {
+                    if(isPresent) stats.curP++;
+                    stats.curOT += ot;
+                } 
+                // Month - 1
+                else if (date.getMonth() === d1.getMonth() && date.getFullYear() === d1.getFullYear()) {
+                    if(isPresent) stats.m1P++;
+                    stats.m1OT += ot;
+                } 
+                // Month - 2
+                else if (date.getMonth() === d2.getMonth() && date.getFullYear() === d2.getFullYear()) {
+                    if(isPresent) stats.m2P++;
+                    stats.m2OT += ot;
+                }
+
+                // Render List HTML
+                html += `
+                    <div class="bg-white p-4 rounded-2xl flex justify-between items-center shadow-sm border border-slate-100">
+                        <div class="flex items-center gap-3">
+                            <div class="bg-slate-100 text-[9px] font-bold p-2 rounded-lg text-slate-500 text-center uppercase">
+                                ${date.toLocaleDateString('en-GB', {day:'2-digit', month:'short'}).replace(' ', '<br>')}
+                            </div>
+                            <p class="text-sm font-bold ${entry.status === 'Present' ? 'text-green-600' : 'text-red-500'}">
+                                ${entry.status} ${ot > 0 ? `(+${ot} hrs)` : ''}
+                            </p>
+                        </div>
+                        <button onclick="deleteAtt('${entry.date}')" class="text-slate-200 hover:text-red-500 transition-colors">✕</button>
+                    </div>`;
+            });
+
+            // Update DOM
+            document.getElementById('attendance-list').innerHTML = html || '<p class="text-center text-slate-400 py-10">No logs found.</p>';
+
+            // Update Current Month Stats
+            document.getElementById('cur-p').innerText = stats.curP;
+            document.getElementById('cur-ot').innerText = stats.curOT;
+            
+            // Update M1 Stats
+            document.getElementById('m1-p').innerText = stats.m1P;
+            document.getElementById('m1-ot').innerText = stats.m1OT;
+            const d1 = new Date(); d1.setMonth(now.getMonth() - 1);
+            document.getElementById('m1-name').innerText = d1.toLocaleString('default', { month: 'short' });
+
+            // Update M2 Stats
+            document.getElementById('m2-p').innerText = stats.m2P;
+            document.getElementById('m2-ot').innerText = stats.m2OT;
+            const d2 = new Date(); d2.setMonth(now.getMonth() - 2);
+            document.getElementById('m2-name').innerText = d2.toLocaleString('default', { month: 'short' });
+            
+            document.getElementById('slip-month').innerText = "FOR " + now.toLocaleString('default', { month: 'long', year:'numeric' }).toUpperCase();
+
+            // Save for calculator
+            globalStats = stats;
+            calculateSalary();
+        }
+
+        // --- 5. Salary Calculation ---
+        function calculateSalary() {
+            const basic = parseFloat(document.getElementById('basic-salary').value);
+            
+            if (!basic) {
+                document.getElementById('calc-base').innerText = "0.00";
+                document.getElementById('calc-ot').innerText = "0.00";
+                document.getElementById('calc-total').innerText = "0.00";
+                return;
+            }
+
+            // Save preference
+            localStorage.setItem('basicSalary', basic);
+
+            // Logic: 30 days per month, 8 hours per day standard
+            const dailyRate = basic / 30;
+            const hourlyRate = dailyRate / 8;
+
+            // Base Pay = Days Present * Daily Rate
+            const basePay = globalStats.curP * dailyRate;
+            
+            // OT Pay = OT Hours * Hourly Rate
+            const otPay = globalStats.curOT * hourlyRate;
+
+            const total = basePay + otPay;
+
+            document.getElementById('calc-base').innerText = basePay.toFixed(2);
+            document.getElementById('calc-ot').innerText = otPay.toFixed(2);
+            document.getElementById('calc-total').innerText = total.toFixed(2);
+        }
+
+        // --- 6. PDF Download ---
+        function downloadPDF() {
+            const element = document.getElementById('salary-slip');
+            const opt = {
+                margin:       10,
+                filename:     'Salary_Slip.pdf',
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2 },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+            html2pdf().set(opt).from(element).save();
+        }
+
+        // --- 7. Form Handlers ---
         document.getElementById('status').addEventListener('change', (e) => {
             document.getElementById('ot-container').style.display = (e.target.value === 'Present') ? 'flex' : 'none';
         });
@@ -166,62 +331,11 @@
             document.getElementById('att-date').valueAsDate = new Date();
         };
 
-        function renderData(data) {
-            let html = '';
-            let stats = { curP: 0, curOT: 0, m1OT: 0, m2OT: 0 };
-            const now = new Date();
-
-            data.forEach((entry) => {
-                const date = new Date(entry.date);
-                const ot = parseFloat(entry.otHours) || 0;
-                
-                const d1 = new Date(); d1.setMonth(now.getMonth() - 1);
-                const d2 = new Date(); d2.setMonth(now.getMonth() - 2);
-
-                if (date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear()) {
-                    if(entry.status === 'Present') stats.curP++;
-                    stats.curOT += ot;
-                } else if (date.getMonth() === d1.getMonth() && date.getFullYear() === d1.getFullYear()) {
-                    stats.m1OT += ot;
-                } else if (date.getMonth() === d2.getMonth() && date.getFullYear() === d2.getFullYear()) {
-                    stats.m2OT += ot;
-                }
-
-                html += `
-                    <div class="bg-white p-4 rounded-2xl flex justify-between items-center shadow-sm border border-slate-100">
-                        <div class="flex items-center gap-3">
-                            <div class="bg-slate-100 text-[9px] font-bold p-2 rounded-lg text-slate-500 text-center uppercase">
-                                ${date.toLocaleDateString('en-GB', {day:'2-digit', month:'short'}).replace(' ', '<br>')}
-                            </div>
-                            <p class="text-sm font-bold ${entry.status === 'Present' ? 'text-green-600' : 'text-red-500'}">
-                                ${entry.status} ${ot > 0 ? `(+${ot} hrs)` : ''}
-                            </p>
-                        </div>
-                        <button onclick="deleteAtt('${entry.date}')" class="text-slate-200 hover:text-red-500 transition-colors">✕</button>
-                    </div>`;
-            });
-
-            document.getElementById('attendance-list').innerHTML = html || '<p class="text-center text-slate-400 py-10">No logs found.</p>';
-            document.getElementById('present-count').innerText = stats.curP;
-            document.getElementById('current-ot-total').innerText = stats.curOT + " hrs";
-            document.getElementById('m1-ot').innerText = stats.m1OT;
-            document.getElementById('m2-ot').innerText = stats.m2OT;
-
-            const d1 = new Date(); d1.setMonth(now.getMonth() - 1);
-            const d2 = new Date(); d2.setMonth(now.getMonth() - 2);
-            document.getElementById('m1-name').innerText = d1.toLocaleString('default', { month: 'short' });
-            document.getElementById('m2-name').innerText = d2.toLocaleString('default', { month: 'short' });
-        }
-
         window.onload = () => {
             document.getElementById('att-date').valueAsDate = new Date();
-
         };
 
-
-
-        // Disable right-click for AdSense security
-document.addEventListener("contextmenu", function(e) { e.preventDefault(); });
+        document.addEventListener("contextmenu", function(e) { e.preventDefault(); });
     </script>
 </body>
 </html>
